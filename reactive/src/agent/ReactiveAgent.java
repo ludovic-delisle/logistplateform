@@ -52,7 +52,6 @@ public class ReactiveAgent implements ReactiveBehavior {
 		
 	
 	    Map<Transition, Set<City>> actionMap = new HashMap<>();
-	    
 	    /*In this double for loop, we add values to actionMap:
 	      We create a Transition object for each city and for each possible situation in this city.
 	    		for example:
@@ -79,7 +78,7 @@ public class ReactiveAgent implements ReactiveBehavior {
 	    }
 	
 	    
-	    bestActions = findBestActions(actionMap);
+	    this.bestActions = findBestActions(actionMap);
 	    
 	    
 	}
@@ -109,7 +108,6 @@ public class ReactiveAgent implements ReactiveBehavior {
 			return new Action.Pickup(availableTask);
 		}
 		else {
-			System.out.println("olol7");
 			return new Action.Move(nextDestination);
 		}
 	}
@@ -130,18 +128,24 @@ public class ReactiveAgent implements ReactiveBehavior {
 			
 			keepTraining=false;
 			
-			
+			//we first iterate over all possible transitions. We have transitions like (city_1, null) and it just means that the agent has no task and has to go to a neighbor city.
+			//for every transition, we have to find the best action (city to go)
 			for(Transition transition : actionMap.keySet()) {
+				
+				//set the highest reward to 0, it will later on be the sum of all the consecutive rewards 
 				Double best_R = 0.0;
 				City bestCity = null;
 				City current_start_city = transition.get_start_city();
 				
 				
+				//we then iterate over all the possible cities => either a neighbor city or the task destination
 				for(City city : actionMap.get(transition)) {
+					
 					
 					Double new_R=0.0;
 					Boolean has_task = (city==transition.get_end_city());
 					
+					//in case it should not be possible to go to a city, the cost for doing so must be very penalizing
 					if(!isPossible(transition, city)) {
 						new_R = Double.NEGATIVE_INFINITY;
 						
@@ -151,6 +155,9 @@ public class ReactiveAgent implements ReactiveBehavior {
 						}
 					
 					
+					//we iterate over all the possible situations that could arise after arriving to the City city.
+					//we add to the previously calculated net reward, the state value of that city attenuated by discount factor in order to make future rewards weight less.
+					//The state value of a city is the best reward that we can hope of getting in the long run if we go to that city.
 					for(Transition next_pos : actionMap.keySet()) {
 						if(next_pos.get_start_city()==city) {
 							Double proba_of_task = taskDistribution.probability(next_pos.get_start_city(), next_pos.get_end_city());
@@ -158,12 +165,14 @@ public class ReactiveAgent implements ReactiveBehavior {
 							
 						}
 					}
+					//if the newly calculated reward is better with this city than for the previous one, it means that we have found a new best city with a new best reward!
 					if (new_R >= best_R) {
 		                bestCity = city;
 		                best_R = new_R;
 		                
 					}
 				}
+				//Finally, we check if there is still a noticeable improvement at each step and decide whether we keep training the agent or not.
 				if (best_R > v.getOrDefault(transition, 0.0)) {
 	                if (best_R - v.getOrDefault(transition, 0.0) > threshold) {
 	                	keepTraining=true;
