@@ -51,11 +51,18 @@ public class ReactiveAgent implements ReactiveBehavior {
 		this.taskDistribution = distribution;
 		
 	
-		
 	    Map<Transition, Set<City>> actionMap = new HashMap<>();
-	    Map<Transition, Double> state_values = new HashMap<>();
-	    for (City startCity : topology.cities()) {
 	    
+	    /*In this double for loop, we add values to actionMap:
+	      We create a Transition object for each city and for each possible situation in this city.
+	    		for example:
+	    			- finding no task ---> Transition(city_1, null)
+	    			- finding a task that sends vehicle in any city --> Transition(city_1, city_x)
+	      Then, for each of those situations, we add a list of cities that the vehicle could go to:
+	        		- city where the task sends the vehicle
+	        		- neighbor city if the task is refused
+	    */
+	    for (City startCity : topology.cities()) {
 	        for (City endCity : topology.cities()) {
 	        	Set<City> possible_move = new HashSet<>();
 	            		for (City neighbor_city : startCity.neighbors()) {
@@ -64,7 +71,6 @@ public class ReactiveAgent implements ReactiveBehavior {
 	            if (startCity.name==endCity.name) {
 	                actionMap.put(new Transition(startCity, null), possible_move);
 	            } else {
-	            	
 	            	possible_move.add(endCity);
 	                actionMap.put(new Transition(startCity, endCity), possible_move);
 	            }
@@ -97,8 +103,6 @@ public class ReactiveAgent implements ReactiveBehavior {
 		}
 		
 		City nextDestination = bestActions.get(currentState);
-		System.out.println(currentState);
-		System.out.println("a");
 		if(nextDestination == destinationOfTask) {
 			
 			
@@ -110,8 +114,13 @@ public class ReactiveAgent implements ReactiveBehavior {
 		}
 	}
 	
+	/**
+     * @returns a Map<Transition, City> which indicate for each situation transition, what the best choice of city is.
+     * @param actionMap indicate for each situation transition, what choices of city we have.
+     * Thus the agent has to choose for each Transition in actionMap the best choice and we'll have bestActions.
+     */
 	private Map<Transition, City> findBestActions( Map<Transition, Set<City>> actionMap){
-		Double threshold= 0.001;
+		Double threshold= 0.0001;
 		Boolean keepTraining=true;
 		
 		Map<Transition, City> newBestAction = new HashMap<>();
@@ -144,7 +153,7 @@ public class ReactiveAgent implements ReactiveBehavior {
 					
 					for(Transition next_pos : actionMap.keySet()) {
 						if(next_pos.get_start_city()==city) {
-							Double proba_of_task = proba_of_task(transition, next_pos, city);
+							Double proba_of_task = taskDistribution.probability(next_pos.get_start_city(), next_pos.get_end_city());
 							new_R += discount*proba_of_task*v.getOrDefault(next_pos, 0.0);
 							
 						}
@@ -166,26 +175,37 @@ public class ReactiveAgent implements ReactiveBehavior {
 	}
 		return newBestAction;
 	}
+	/**
+     * @returns the net reward for going from a city to another 
+     * @param startCity the starting city
+     * @param endCity the ending city
+     * @param isGain if it is to do a task or just to move to a neighboring city
+     */
 	private Double netReward(City startCity, City endCity, Boolean isGain) {
 		double gain=0.0;
 		if(isGain) {
+			//if the trip isn't done for a task, there's no reward.
 			gain = taskDistribution.reward(startCity, endCity);
 		}
 		double task_dist = startCity.distanceTo(endCity);
 		double cost = task_dist*myAgent.vehicles().get(0).costPerKm();
 		return gain - cost;
 	}
-	
+	/**
+     * @returns if for a given Transition, it is possible to go to nextCity
+     * @param transition the transition that might take the vehicle to the next city
+     * @param nextCity the city we control that it is possible to go to
+     */
 	private Boolean isPossible(Transition transition, City nextCity){
+		// if nextCity is a neighbor the startCity of transition then it will be true
 		Boolean next_city_is_a_neighbor=transition.get_start_city().neighbors().contains(nextCity);
+		
+		// if nextCity is the endCity of transition then it will be true
 		Boolean next_city_is_task_destination = nextCity == transition.get_end_city();
+		
+		
 		Boolean possible= next_city_is_a_neighbor || next_city_is_task_destination;
 		return possible;
 	}
 	
-	private double proba_of_task(Transition transition, Transition nextTransition, City nextCity) {
-		
-		return taskDistribution.probability(nextTransition.get_start_city(), nextTransition.get_end_city());
-	}
-
 }
