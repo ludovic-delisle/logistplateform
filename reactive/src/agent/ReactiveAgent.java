@@ -31,7 +31,7 @@ public class ReactiveAgent implements ReactiveBehavior {
 	private Agent myAgent;
 	private TaskDistribution taskDistribution;
 	private Double discount;
-	
+	private Double total_km;
 	
 	
 	private Map<Transition, City> bestActions;
@@ -49,6 +49,7 @@ public class ReactiveAgent implements ReactiveBehavior {
 		this.numActions = 0;
 		this.myAgent = agent;
 		this.taskDistribution = distribution;
+		this.total_km=0.0;
 		
 	
 	    Map<Transition, Set<City>> actionMap = new HashMap<>();
@@ -87,7 +88,7 @@ public class ReactiveAgent implements ReactiveBehavior {
 	@Override
 	public Action act(Vehicle vehicle, Task availableTask) {
 		
-		numActions++;
+		
 		City destinationOfTask=null;
 		City currentCityName=vehicle.getCurrentCity();
 	
@@ -98,10 +99,17 @@ public class ReactiveAgent implements ReactiveBehavior {
 		for(Transition i : bestActions.keySet()) {
 			if(i.sameTransition(currentState)){
 				currentState=i;
-			}
+			}		
 		}
 		
 		City nextDestination = bestActions.get(currentState);
+		total_km+= nextDestination.distanceTo(currentCityName);
+		
+		if (numActions >= 0 && numActions<=1000) {
+            System.out.println(numActions + ";" + myAgent.getTotalProfit());
+		}
+		numActions++;
+		
 		if(nextDestination == destinationOfTask) {
 			
 			
@@ -118,7 +126,7 @@ public class ReactiveAgent implements ReactiveBehavior {
      * Thus the agent has to choose for each Transition in actionMap the best choice and we'll have bestActions.
      */
 	private Map<Transition, City> findBestActions( Map<Transition, Set<City>> actionMap){
-		Double threshold= 0.0001;
+		Double threshold= 0.01;
 		Boolean keepTraining=true;
 		
 		Map<Transition, City> newBestAction = new HashMap<>();
@@ -133,7 +141,7 @@ public class ReactiveAgent implements ReactiveBehavior {
 			for(Transition transition : actionMap.keySet()) {
 				
 				//set the highest reward to 0, it will later on be the sum of all the consecutive rewards 
-				Double best_R = 0.0;
+				Double best_R = Double.NEGATIVE_INFINITY;
 				City bestCity = null;
 				City current_start_city = transition.get_start_city();
 				
@@ -161,7 +169,8 @@ public class ReactiveAgent implements ReactiveBehavior {
 					for(Transition next_pos : actionMap.keySet()) {
 						if(next_pos.get_start_city()==city) {
 							Double proba_of_task = taskDistribution.probability(next_pos.get_start_city(), next_pos.get_end_city());
-							new_R += discount*proba_of_task*v.getOrDefault(next_pos, 0.0);
+								new_R += discount*proba_of_task*v.getOrDefault(next_pos, 0.0);
+							
 							
 						}
 					}
@@ -180,6 +189,10 @@ public class ReactiveAgent implements ReactiveBehavior {
 	                v.put(transition, best_R);
                     newBestAction.put(transition, bestCity);
 	            }
+				if(best_R<0) {
+					 v.put(transition, best_R);
+	                 newBestAction.put(transition, bestCity);
+				}
 			}
 	}
 		return newBestAction;
@@ -194,6 +207,7 @@ public class ReactiveAgent implements ReactiveBehavior {
 		double gain=0.0;
 		if(isGain) {
 			//if the trip isn't done for a task, there's no reward.
+			System.out.println(startCity.name +" "+ endCity.name + " "+ taskDistribution.reward(startCity, endCity));
 			gain = taskDistribution.reward(startCity, endCity);
 		}
 		double task_dist = startCity.distanceTo(endCity);
