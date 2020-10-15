@@ -3,7 +3,7 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
-import logist.plan.Action;
+import actions.Action;
 import logist.plan.Plan;
 import logist.task.TaskSet;
 import logist.topology.Topology;
@@ -15,53 +15,85 @@ public class State {
 	private Vehicle vehicle;
 	private double current_cost=0;
 	private TaskSet available_tasks;
-	private TaskSet current_tasks;
-	private TaskSet tasks_taken;
-	private double cost_km;
+	private TaskSet current_tasks=null;
+	private Task priority_task=null; //the Task that it is currently executing
+	private City destination_city=null;
+	private int remainingCapacity;
+	private boolean isFinalState=false;
+	List<Action> previous_actions=null;
 	
-	public State(Vehicle vehicle, TaskSet tasks) {
+	public State(Vehicle vehicle, TaskSet tasks, boolean isFinalState1) {
 		this.vehicle=vehicle;
 		this.available_tasks=tasks;
 		this.current_tasks=vehicle.getCurrentTasks();
-		this.cost_km=vehicle.costPerKm();
+		this.setRemainingCapacity(vehicle.capacity());
+		this.isFinalState = isFinalState1;
 	}
 	
-	// called for next state after an action move
-	public State(State state, City next_city) {
-		double additional_cost = state.get_cost_km()*next_city.distanceTo(state.get_current_city());
-		this.current_cost= state.get_current_cost()+additional_cost;
-		this.vehicle=state.get_vehicle();
-		this.available_tasks=state.get_tasks();
-		this.tasks_taken=state.get_taken_task();
-		this.current_tasks=state.get_current_tasks();
-	}
 	
-	public List<Action> get_possible_actions(){
-		List<Action> possible_actions = new ArrayList<>();
+	public void changePriorityTask(Task newPriorityTask) {
 		
-		return possible_actions; 
+		this.priority_task = newPriorityTask;
+		this.destination_city = newPriorityTask.deliveryCity;
 	}
 	
-	public City get_current_city(){
+
+	// C'est la même chose que get tasks non? On veut les tasks qu'il reste à accomplir non?
+	public List<Action> get_possible_actions(){
+				
+		return null; 
+	}
+	
+	public City getCurrentCity(){
 		return vehicle.getCurrentCity();
 	}
-	public TaskSet get_tasks() {
+	public TaskSet getTasks() {
 		return available_tasks;
 	}
-	public TaskSet get_current_tasks() {
+	public TaskSet getCurrentTasks() {
 		return current_tasks;
 	}
-	public double get_current_cost() {
+	public double getCurrentCost() {
 		return current_cost;
 	}
-	public double get_cost_km() {
-		return cost_km;
+	public void setCurrentCost(double cost) {
+		this.current_cost = cost;
 	}
-	public Vehicle get_vehicle() {
+	public Vehicle getVehicle() {
 		return vehicle;
 	}
-	public TaskSet get_taken_task() {
-		return tasks_taken;
+	public Task getPriorityTask() {
+		return priority_task;
 	}
-	public boolean 
+	public City getDestinationCity() {
+		return destination_city;
+	}
+	public boolean isFinalState() {
+		return isFinalState;
+	}
+
+	public int getRemainingCapacity() {
+		return remainingCapacity;
+	}
+
+	public void setRemainingCapacity(int remainingCapacity) {
+		this.remainingCapacity = remainingCapacity;
+	}
+	
+	public int getCostKm() {
+		return this.vehicle.costPerKm();
+	}
+	public double getSpeed() {
+		return this.vehicle.speed();
+	}
+	public void updateActionList(List<Action> act_list) {
+		this.previous_actions = act_list;
+	}
+	
+	public List<Action> getActionList() {
+		return this.previous_actions;
+	}
+	
+	
+
 }
