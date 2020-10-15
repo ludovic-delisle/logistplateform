@@ -6,6 +6,10 @@ import model.State;
 public class Pickup implements Action{
 	
 	private Task task;
+	
+	public Pickup(Task task) {
+		this.task = task;
+	}
 
 	@Override
 	public logist.plan.Action getResultingAction() {

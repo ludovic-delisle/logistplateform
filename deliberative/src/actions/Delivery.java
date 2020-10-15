@@ -13,10 +13,6 @@ public class Delivery implements Action{
 	public Delivery(Task task) {
 		this.task = task;
 	}
-	
-	public void run(State state, Task task) {
-		
-	}
 
 	@Override
 	public logist.plan.Action getResultingAction() {

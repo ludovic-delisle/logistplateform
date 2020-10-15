@@ -32,7 +32,7 @@ public class Move implements Action{
 
 	@Override
 	public double getCurrentCost() {
-		return current_city.distanceTo(next_city) * costPerKm;
+		return current_city.distanceTo(next_city)*costPerKm;
 	}
 	
 
