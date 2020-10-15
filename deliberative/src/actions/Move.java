@@ -1,6 +1,5 @@
 package actions;
 
-import logist.task.Task;
 import logist.topology.Topology.City;
 import model.State;
 

@@ -2,6 +2,7 @@ package template;
 
 /* import table */
 import logist.simulation.Vehicle;
+
 import logist.agent.Agent;
 import logist.behavior.DeliberativeBehavior;
 import logist.plan.Plan;
@@ -10,6 +11,8 @@ import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
+import model.State;
+import algorithm.Astar;
 
 /**
  * An optimal planner for one vehicle.
@@ -53,8 +56,8 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		// Compute the plan with the selected algorithm.
 		switch (algorithm) {
 		case ASTAR:
-			// ...
-			plan = naivePlan(vehicle, tasks);
+			State state = new State(vehicle, tasks, false);
+			plan = Astar.run(state);
 			break;
 		case BFS:
 			// ...
