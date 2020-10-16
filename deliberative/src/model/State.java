@@ -14,14 +14,14 @@ import logist.topology.Topology.City;
 import logist.simulation.Vehicle;
 import logist.task.Task;
 
-public class State {
+public class State implements Comparable<State>{
 	private Vehicle vehicle;
 	private double current_cost=0;
 	private TaskSet available_tasks;
 	private TaskSet current_tasks=null;
 	private int remainingCapacity;
-	private boolean isFinalState=false;
-	List<Action> previous_actions=null;
+	private boolean isFinalState;
+	List<Action> previous_actions=new ArrayList<Action>();
 	
 	public State(Vehicle vehicle, TaskSet tasks, boolean isFinalState1) {
 		this.vehicle=vehicle;
@@ -31,13 +31,24 @@ public class State {
 		this.isFinalState = isFinalState1;
 	}
 	
+	public State(Vehicle vehicle, double current_cost, TaskSet available_tasks, TaskSet current_tasks, int remainingCapacity,
+			List<Action> previous_actions) {
+		this.vehicle = vehicle;
+		this.current_cost = current_cost;
+		this.available_tasks = available_tasks;
+		this.current_tasks = current_tasks;
+		this.remainingCapacity = remainingCapacity;
+		this.isFinalState = isFinalState();
+		this.previous_actions = previous_actions;
+	}
+	
 	public Plan toPlan() {
 		List<Action> temp_act_list = this.getActionList();
 		List<logist.plan.Action> act_list = new ArrayList<logist.plan.Action>();
 		for(Action a : temp_act_list) {
 			act_list.add(a.getResultingAction());
 		}
-		
+
 		return new Plan(this.getCurrentCity(), act_list);
 	}
 	
@@ -85,7 +96,7 @@ public class State {
 
         return possibleActions;
     }
-	
+
 	public City getCurrentCity(){
 		return vehicle.getCurrentCity();
 	}
@@ -105,7 +116,7 @@ public class State {
 		return vehicle;
 	}
 	public boolean isFinalState() {
-		return isFinalState;
+		return this.current_tasks.isEmpty() && this.available_tasks.isEmpty();
 	}
 	public int getRemainingCapacity() {
 		return remainingCapacity;
@@ -124,6 +135,11 @@ public class State {
 	}
 	public List<Action> getActionList() {
 		return this.previous_actions;
+	}
+
+	@Override
+	public int compareTo(State state) {
+		return (int) this.getCurrentCost() - (int)state.getCurrentCost();
 	}
 	
 }

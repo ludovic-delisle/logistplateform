@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import logist.task.Task;
+import logist.task.TaskSet;
 import model.State;
 
 public class Delivery implements Action{
@@ -23,12 +24,19 @@ public class Delivery implements Action{
 	@Override
 	public State getResultingState(State state) {
 		assert(state.getCurrentCity() == task.deliveryCity);
-		state.getCurrentTasks().remove(task);
-		state.setRemainingCapacity(state.getRemainingCapacity() + task.weight);
-		List<Action> actions_list_temp = new ArrayList<>(state.getActionList());
-		actions_list_temp.add(this);
-		state.updateActionList(actions_list_temp);
-		return state;
+		
+		List<Action> act_list = new ArrayList<Action>(state.getActionList());
+		act_list.add(this);
+		
+		TaskSet current_tasks = state.getCurrentTasks().clone();
+		current_tasks.remove(task);
+		
+		return new State(state.getVehicle(),
+				state.getCurrentCost(),
+				state.getTasks(), 
+				current_tasks, 
+				state.getRemainingCapacity() + task.weight,
+				act_list);	
 	}
 
 	@Override

@@ -16,13 +16,15 @@ public class Astar {
 		class StateComparator implements Comparator<State>{ 
             @Override
 			public int compare(State s1, State s2) {
-				return (int) s1.getCurrentCost() - (int) s2.getCurrentCost();
+				int res = (int) s1.getCurrentCost() - (int) s2.getCurrentCost();
+				return res;
                
             }
         } 
 		
-		Comparator<State> comparator = new StateComparator();
+		StateComparator comparator = new StateComparator();
 		myPriorityQueue statesQueue = new myPriorityQueue(comparator);
+		statesQueue.add(startState);
 		
 		while (!state.isFinalState() && !statesQueue.isEmpty()) {
 	        nSteps += 1;
@@ -31,7 +33,13 @@ public class Astar {
 	        if (!statesQueue.contains(state) || statesQueue.compare(state)){
 	        	//since we use a priority queue, the sort steps is already done implicitly
 	            statesQueue.add(state);
-	            statesQueue.addAll(state.getNextStates());
+	            System.out.println("A plan was nnnnnnnnn in "+ Arrays.toString(statesQueue.toArray()));
+	            statesQueue.add(state);
+	            System.out.println("A plan was ccccccccccc in "+ Arrays.toString(statesQueue.toArray()));
+	            List<State> l = new ArrayList<>(state.getNextStates());
+	            System.out.println("A plan was ppppppppppppp lsize "+ l.size() + "  sssize " + statesQueue.size());
+	            statesQueue.addAll(l);
+	            System.out.println("A plan was lllllllllll in" + statesQueue.size() + "  " + Arrays.toString(statesQueue.toArray()));
 	        }
 		}
 		

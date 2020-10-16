@@ -13,7 +13,7 @@ public class myPriorityQueue extends PriorityQueue<State> {
 	private static final long serialVersionUID = 1L;
 	
 	public myPriorityQueue(Comparator<State> comparator) {
-		new PriorityQueue<State>(comparator);
+		new PriorityQueue<State>(10, comparator);
     }        
 
 	public boolean compare(State state) {

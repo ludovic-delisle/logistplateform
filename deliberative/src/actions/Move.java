@@ -1,5 +1,10 @@
 package actions;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import logist.simulation.Vehicle;
+import logist.task.TaskSet;
 import logist.topology.Topology.City;
 import model.State;
 
@@ -23,10 +28,15 @@ public class Move implements Action{
 
 	@Override
 	public State getResultingState(State state) {
-		double additional_cost = state.getCostKm()*next_city.distanceTo(state.getCurrentCity());
-		state.setCurrentCost(state.getCurrentCost()+additional_cost);
+		List<Action> act_list = new ArrayList<Action>(state.getActionList());
+		act_list.add(this);
 		
-		return state;
+		return new State(state.getVehicle(),
+				state.getCurrentCost() + this.getCurrentCost(),
+				state.getTasks(), 
+				state.getCurrentTasks(), 
+				state.getRemainingCapacity(),
+				act_list);		
 	}
 
 	@Override

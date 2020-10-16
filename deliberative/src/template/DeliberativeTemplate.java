@@ -12,6 +12,9 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 import model.State;
+
+import java.util.Arrays;
+
 import algorithm.Astar;
 
 /**
@@ -58,6 +61,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		case ASTAR:
 			State state = new State(vehicle, tasks, false);
 			plan = Astar.run(state);
+			System.out.println("A plan was daffodils in ");
 			break;
 		case BFS:
 			// ...
