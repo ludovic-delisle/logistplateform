@@ -28,15 +28,13 @@ public class Move implements Action{
 
 	@Override
 	public State getResultingState(State state) {
-		List<Action> act_list = new ArrayList<Action>(state.getActionList());
-		act_list.add(this);
+double additional_cost = state.getCostKm()*next_city.distanceTo(state.getCurrentCity());
 		
-		return new State(state.getVehicle(),
-				state.getCurrentCost() + this.getCurrentCost(),
-				state.getTasks(), 
-				state.getCurrentTasks(), 
-				state.getRemainingCapacity(),
-				act_list);		
+		List<Action> actions = new ArrayList<>(state.getActionList());
+	    actions.add(this);
+		
+		return new State(next_city, state,additional_cost, actions);
+		
 	}
 
 	@Override

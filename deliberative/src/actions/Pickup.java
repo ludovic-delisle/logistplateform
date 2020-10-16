@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import logist.task.Task;
+import logist.task.TaskSet;
 import model.State;
 
 public class Pickup implements Action{
@@ -22,14 +23,19 @@ public class Pickup implements Action{
 	@Override
 	public State getResultingState(State state) {
 		assert(state.getCurrentCity() == task.pickupCity);
-		state.getTasks().remove(task);
-		state.getCurrentTasks().add(task);
-		state.setRemainingCapacity(state.getRemainingCapacity() - task.weight);
-		List<Action> actions_list_temp = new ArrayList<>(state.getActionList());
-		actions_list_temp.add(this);
-		state.updateActionList(actions_list_temp);
+
+		TaskSet new_current_task_set = state.getCurrentTasks().clone();
+		new_current_task_set.add(task);
+
+		TaskSet new_available_task_set = state.getTasks().clone();
+		new_available_task_set.remove(task);
 		
-		return state;
+		Integer weight = task.weight;
+		
+		List<Action> actions = new ArrayList<>(state.getActionList());
+		actions.add(this);
+		
+		return new State(state, new_available_task_set, new_current_task_set, weight, actions);
 	}
 
 	@Override

@@ -21,6 +21,7 @@ public class State implements Comparable<State>{
 	private TaskSet current_tasks=null;
 	private int remainingCapacity;
 	private boolean isFinalState;
+	private City current_city;
 	List<Action> previous_actions=new ArrayList<Action>();
 	
 	public State(Vehicle vehicle, TaskSet tasks, boolean isFinalState1) {
@@ -41,6 +42,48 @@ public class State implements Comparable<State>{
 		this.isFinalState = isFinalState();
 		this.previous_actions = previous_actions;
 	}
+	
+	//constructor initial state
+		public State(Vehicle vehicle, TaskSet tasks) {
+			this.vehicle=vehicle;
+			this.available_tasks=tasks;
+			this.current_tasks=vehicle.getCurrentTasks();
+			this.setRemainingCapacity(vehicle.capacity());
+			this.current_city=vehicle.getCurrentCity();
+			this.previous_actions = new ArrayList<>();
+		}
+		//constructor for action move
+		public State(City city, State old_state,Double cost, List<Action> actions) {
+			this.vehicle=old_state.getVehicle();
+			this.available_tasks=old_state.getTasks();
+			this.current_tasks= old_state.getCurrentTasks();
+			this.setRemainingCapacity(vehicle.capacity());
+			this.current_city=city;
+			this.current_cost+=cost;
+			this.previous_actions=actions;
+		}
+		
+		//constructor for action pickup
+		public State(State old_state, TaskSet available_tasks, TaskSet current_tasks, Integer weight_to_add, List<Action> actions) {
+			this.vehicle=old_state.getVehicle();
+			this.available_tasks=available_tasks;
+			this.current_tasks= current_tasks;
+			this.setRemainingCapacity(vehicle.capacity()+ weight_to_add);
+			this.current_city=old_state.getCurrentCity();
+			this.previous_actions=actions;
+			this.current_cost=old_state.getCurrentCost();
+		}
+		
+		//constructor for action delivery
+		public State(State old_state, TaskSet current_tasks, Integer weight_to_drop, List<Action> actions) {
+			this.vehicle=old_state.getVehicle();
+			this.available_tasks=old_state.getTasks();
+			this.current_tasks= current_tasks;
+			this.setRemainingCapacity(vehicle.capacity() - weight_to_drop);
+			this.current_city=old_state.getCurrentCity();
+			this.previous_actions=actions;
+			this.current_cost=old_state.getCurrentCost();
+		}
 	
 	public Plan toPlan() {
 		List<Action> temp_act_list = this.getActionList();
@@ -98,7 +141,7 @@ public class State implements Comparable<State>{
     }
 
 	public City getCurrentCity(){
-		return vehicle.getCurrentCity();
+		return current_city;
 	}
 	public TaskSet getTasks() {
 		return available_tasks;

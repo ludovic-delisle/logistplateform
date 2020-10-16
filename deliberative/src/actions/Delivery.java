@@ -25,18 +25,15 @@ public class Delivery implements Action{
 	public State getResultingState(State state) {
 		assert(state.getCurrentCity() == task.deliveryCity);
 		
-		List<Action> act_list = new ArrayList<Action>(state.getActionList());
-		act_list.add(this);
+		TaskSet new_current_task_set = state.getCurrentTasks().clone();
+		new_current_task_set.remove(task);
 		
-		TaskSet current_tasks = state.getCurrentTasks().clone();
-		current_tasks.remove(task);
+		Integer weight = task.weight;
 		
-		return new State(state.getVehicle(),
-				state.getCurrentCost(),
-				state.getTasks(), 
-				current_tasks, 
-				state.getRemainingCapacity() + task.weight,
-				act_list);	
+		List<Action> actions = new ArrayList<>(state.getActionList());
+		actions.add(this);
+		
+		return new State(state, new_current_task_set, weight, actions);
 	}
 
 	@Override

@@ -16,6 +16,7 @@ import model.State;
 import java.util.Arrays;
 
 import algorithm.Astar;
+import algorithm.BFS;
 
 /**
  * An optimal planner for one vehicle.
@@ -64,8 +65,8 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			System.out.println("A plan was daffodils in ");
 			break;
 		case BFS:
-			// ...
-			plan = naivePlan(vehicle, tasks);
+			State state_2 = new State(vehicle, tasks);
+			plan = BFS.find_best_plan(state_2);
 			break;
 		default:
 			throw new AssertionError("Should not happen.");
