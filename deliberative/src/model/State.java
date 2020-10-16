@@ -44,7 +44,7 @@ public class State implements Comparable<State>{
 	}
 	
 	//constructor initial state
-		public State(Vehicle vehicle, TaskSet tasks) {
+	public State(Vehicle vehicle, TaskSet tasks) {
 			this.vehicle=vehicle;
 			this.available_tasks=tasks;
 			this.current_tasks=vehicle.getCurrentTasks();
@@ -53,7 +53,7 @@ public class State implements Comparable<State>{
 			this.previous_actions = new ArrayList<>();
 		}
 		//constructor for action move
-		public State(City city, State old_state,Double cost, List<Action> actions) {
+	public State(City city, State old_state,Double cost, List<Action> actions) {
 			this.vehicle=old_state.getVehicle();
 			this.available_tasks=old_state.getTasks();
 			this.current_tasks= old_state.getCurrentTasks();
@@ -64,7 +64,7 @@ public class State implements Comparable<State>{
 		}
 		
 		//constructor for action pickup
-		public State(State old_state, TaskSet available_tasks, TaskSet current_tasks, Integer weight_to_add, List<Action> actions) {
+	public State(State old_state, TaskSet available_tasks, TaskSet current_tasks, Integer weight_to_add, List<Action> actions) {
 			this.vehicle=old_state.getVehicle();
 			this.available_tasks=available_tasks;
 			this.current_tasks= current_tasks;
@@ -75,7 +75,7 @@ public class State implements Comparable<State>{
 		}
 		
 		//constructor for action delivery
-		public State(State old_state, TaskSet current_tasks, Integer weight_to_drop, List<Action> actions) {
+	public State(State old_state, TaskSet current_tasks, Integer weight_to_drop, List<Action> actions) {
 			this.vehicle=old_state.getVehicle();
 			this.available_tasks=old_state.getTasks();
 			this.current_tasks= current_tasks;
@@ -126,7 +126,7 @@ public class State implements Comparable<State>{
                 if (task.pickupCity == this.getCurrentCity()) { 
                     possibleActions.add(new Pickup(task));
                 } else { 
-                	// If we cannot deliver a task in that city, we can simply move to it
+                	// If we cannot pickup a task in that city, we can simply move to it
                     moveActions.add(this.getCurrentCity().pathTo(task.pickupCity).get(0));
                 }
             }
@@ -179,10 +179,38 @@ public class State implements Comparable<State>{
 	public List<Action> getActionList() {
 		return this.previous_actions;
 	}
-
 	@Override
 	public int compareTo(State state) {
 		return (int) this.getCurrentCost() - (int)state.getCurrentCost();
 	}
 	
+	public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        State that = (State) o;
+
+        if (remainingCapacity != that.getRemainingCapacity()) return false;
+        if (current_city != null ? !current_city.equals(that.current_city) : that.current_city != null) return false;
+        if (current_tasks != null ? !current_tasks.equals(that.current_tasks) : that.current_tasks != null) return false;
+        return available_tasks != null ? available_tasks.equals(that.available_tasks) : that.available_tasks == null;
+    }
+	
+	@Override
+    public int hashCode() {
+        int result = current_city != null ? current_city.hashCode() : 0;
+        result = 31 * result + (current_tasks != null ? current_tasks.hashCode() : 0);
+        result = 31 * result + remainingCapacity;
+        result = 31 * result + (available_tasks != null ? available_tasks.hashCode() : 0);
+        return result;
+    }
+	public boolean same_state(State state) {
+		if(this.remainingCapacity != state.getRemainingCapacity()
+				||this.current_city != state.getCurrentCity()
+				||this.available_tasks!= state.getTasks()
+				||this.current_tasks!= state.getCurrentTasks()) {
+			return false;
+		}
+		return true;
+	}
 }

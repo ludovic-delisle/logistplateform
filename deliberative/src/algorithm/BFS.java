@@ -13,9 +13,11 @@ public class BFS {
 		Queue<State> start_queue = new LinkedList<>();
 		start_queue.add(startingState);
 		myPriorityQueue queue =new myPriorityQueue(start_queue);
+		queue.visit_state(startingState);
 		queue.add_all_possible_states_to_queue(startingState.getNextStates());
-		
 		State bestState=null;
+		
+		System.out.println(queue.size());
 		
 		 
 	    if (startingState.isFinalState()) {
@@ -23,12 +25,11 @@ public class BFS {
 	    }
 	    
 	    while (!queue.isEmpty()) {
-	    	
+	    	System.out.println("olololol");
 	    	State best_state_candidat = queue.poll();
-	    	
 	    	if (!queue.isVisited(best_state_candidat)) {
 	    		queue.visit_state(best_state_candidat);
-                queue.addAll(best_state_candidat.getNextStates());
+                queue.add_all_possible_states_to_queue(best_state_candidat.getNextStates());
             }
             if (best_state_candidat.isFinalState() && (bestState == null || best_state_candidat.getCurrentCost() < bestState.getCurrentCost())) {
                 bestState = best_state_candidat;

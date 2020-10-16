@@ -55,5 +55,22 @@ public class myPriorityQueue extends PriorityQueue<State> {
 	    }
 		return false;
 	}
+	@Override
+    public boolean contains(Object o) {
+        return states_queue.contains(o);
+    }
+	@Override
+    public boolean isEmpty() {
+        return states_queue.isEmpty();
+    }
+	@Override
+	public State poll() {
+	    State state = states_queue.poll();
+		return state;
+	}
+	@Override
+    public int size() {
+        return states_queue.size();
+    }
 
 }
