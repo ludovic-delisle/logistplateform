@@ -25,6 +25,7 @@ import algorithm.BFS;
 public class DeliberativeTemplate implements DeliberativeBehavior {
 
 	enum Algorithm { BFS, ASTAR }
+	public enum Heuristic { NONE, DISTANCE }
 	
 	/* Environment */
 	Topology topology;
@@ -60,13 +61,17 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		// Compute the plan with the selected algorithm.
 		switch (algorithm) {
 		case ASTAR:
-			State state = new State(vehicle, tasks, false);
-			plan = Astar.run(state);
-			System.out.println("A plan was daffodils in ");
+			State state = new State(vehicle, tasks);
+			Heuristic n = Heuristic.NONE;
+			plan = Astar.run(state, n);
+			System.out.println("ASTAR  has total distance of: " + plan.totalDistance() + " km");
 			break;
+			
 		case BFS:
+			
 			State state_2 = new State(vehicle, tasks);
 			plan = BFS.find_best_plan(state_2);
+			System.out.println("BFS  has total distance of: " + plan.totalDistance() + " km");
 			break;
 		default:
 			throw new AssertionError("Should not happen.");

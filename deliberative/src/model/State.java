@@ -20,17 +20,8 @@ public class State implements Comparable<State>{
 	private TaskSet available_tasks;
 	private TaskSet current_tasks=null;
 	private int remainingCapacity;
-	private boolean isFinalState;
 	private City current_city;
 	List<Action> previous_actions=new ArrayList<Action>();
-	
-	public State(Vehicle vehicle, TaskSet tasks, boolean isFinalState1) {
-		this.vehicle=vehicle;
-		this.available_tasks=tasks;
-		this.current_tasks=vehicle.getCurrentTasks();
-		this.setRemainingCapacity(vehicle.capacity());
-		this.isFinalState = isFinalState1;
-	}
 	
 	public State(Vehicle vehicle, double current_cost, TaskSet available_tasks, TaskSet current_tasks, int remainingCapacity,
 			List<Action> previous_actions) {
@@ -39,7 +30,6 @@ public class State implements Comparable<State>{
 		this.available_tasks = available_tasks;
 		this.current_tasks = current_tasks;
 		this.remainingCapacity = remainingCapacity;
-		this.isFinalState = isFinalState();
 		this.previous_actions = previous_actions;
 	}
 	
@@ -51,8 +41,9 @@ public class State implements Comparable<State>{
 			this.setRemainingCapacity(vehicle.capacity());
 			this.current_city=vehicle.getCurrentCity();
 			this.previous_actions = new ArrayList<>();
-		}
-		//constructor for action move
+	}
+	
+	//constructor for action move
 	public State(City city, State old_state,Double cost, List<Action> actions) {
 			this.vehicle=old_state.getVehicle();
 			this.available_tasks=old_state.getTasks();
@@ -61,9 +52,9 @@ public class State implements Comparable<State>{
 			this.current_city=city;
 			this.current_cost+=cost;
 			this.previous_actions=actions;
-		}
+	}
 		
-		//constructor for action pickup
+	//constructor for action pickup
 	public State(State old_state, TaskSet available_tasks, TaskSet current_tasks, Integer weight_to_add, List<Action> actions) {
 			this.vehicle=old_state.getVehicle();
 			this.available_tasks=available_tasks;
@@ -72,7 +63,7 @@ public class State implements Comparable<State>{
 			this.current_city=old_state.getCurrentCity();
 			this.previous_actions=actions;
 			this.current_cost=old_state.getCurrentCost();
-		}
+	}
 		
 		//constructor for action delivery
 	public State(State old_state, TaskSet current_tasks, Integer weight_to_drop, List<Action> actions) {

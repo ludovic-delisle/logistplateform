@@ -1,6 +1,5 @@
 package algorithm;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -11,7 +10,6 @@ import model.State;
 
 public class myPriorityQueue extends PriorityQueue<State> {
 	
-	
 	private Map<State, State> visited_states;
     private Queue<State> states_queue;
 	/**
@@ -19,9 +17,6 @@ public class myPriorityQueue extends PriorityQueue<State> {
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	public myPriorityQueue(Comparator<State> comparator) {
-		new PriorityQueue<State>(10, comparator);
-    }        
 	
 	public myPriorityQueue(Queue<State> startingState) {
 		this.states_queue=startingState;
@@ -37,6 +32,15 @@ public class myPriorityQueue extends PriorityQueue<State> {
 		return visited_states.containsKey(state);
 	}
 	
+	@Override
+	public boolean add(State state) {
+		if (!visited_states.containsKey(state) || state.getCurrentCost() < visited_states.get(state).getCurrentCost()) {
+	           states_queue.add(state);
+	           return true;
+	       }
+		return false;
+	}
+	
 	public void add_all_possible_states_to_queue(List<State> possible_states) {
 		for(State state : possible_states) {
 			if (!visited_states.containsKey(state) || state.getCurrentCost() < visited_states.get(state).getCurrentCost()) {
@@ -44,17 +48,20 @@ public class myPriorityQueue extends PriorityQueue<State> {
 	        }
 		}
 	}
-
-	public boolean compare(State state) {
-		while(!this.isEmpty()) {
-			model.State s = this.poll();
-			if(s.getCurrentCity() == state.getCurrentCity() && s.getCurrentTasks() == state.getCurrentTasks()
-					&& s.getCurrentCost() < state.getCurrentCost() ){
-				return true;
-			}
-	    }
-		return false;
+	public double calculateHeuristic(State state) {
+		return 0.0;
 	}
+	
+	public boolean compare(State state) {
+		double state_cost = state.getCurrentCost() + calculateHeuristic(state);
+		if(!visited_states.containsKey(state)) return true;
+		else {
+			double queue_state_cost = visited_states.get(state).getCurrentCost() + calculateHeuristic(visited_states.get(state));
+			if(state_cost < queue_state_cost) return true;
+			else return false;
+		}
+	}
+	
 	@Override
     public boolean contains(Object o) {
         return states_queue.contains(o);

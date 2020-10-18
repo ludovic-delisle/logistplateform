@@ -5,7 +5,6 @@ import model.State;
 
 import java.util.LinkedList;
 import java.util.Queue;
-import algorithm.myPriorityQueue;
 
 public class BFS {
 	
@@ -25,7 +24,6 @@ public class BFS {
 	    }
 	    
 	    while (!queue.isEmpty()) {
-	    	System.out.println("olololol");
 	    	State best_state_candidat = queue.poll();
 	    	if (!queue.isVisited(best_state_candidat)) {
 	    		queue.visit_state(best_state_candidat);
