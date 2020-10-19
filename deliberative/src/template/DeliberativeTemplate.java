@@ -25,7 +25,7 @@ import algorithm.BFS;
 public class DeliberativeTemplate implements DeliberativeBehavior {
 
 	enum Algorithm { BFS, ASTAR }
-	public enum Heuristic { NONE, DISTANCE, DISTANCE2 }
+	public enum Heuristic { NONE, DISTANCE, DISTANCE2, DISTANCE3 }
 	
 	/* Environment */
 	Topology topology;
@@ -37,6 +37,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 
 	/* the planning class */
 	Algorithm algorithm;
+	Heuristic heuristic;
 	
 	@Override
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
@@ -47,11 +48,12 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		// initialize the planner
 		int capacity = agent.vehicles().get(0).capacity();
 		String algorithmName = agent.readProperty("algorithm", String.class, "ASTAR");
+		String heuristicName = agent.readProperty("heuristic", String.class, "NONE");
 		
 		// Throws IllegalArgumentException if algorithm is unknown
 		algorithm = Algorithm.valueOf(algorithmName.toUpperCase());
 		
-		// ...
+		heuristic = Heuristic.valueOf(heuristicName.toUpperCase());
 	}
 	
 	@Override
@@ -62,8 +64,8 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		switch (algorithm) {
 		case ASTAR:
 			State state = new State(vehicle, tasks);
-			Heuristic n = Heuristic.NONE;
-			plan = Astar.run(state, n);
+			
+			plan = Astar.run(state, heuristic);
 			System.out.println("ASTAR  has total distance of: " + plan.totalDistance() + " km");
 			break;
 			

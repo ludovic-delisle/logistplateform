@@ -50,7 +50,7 @@ public class Astar {
 		double total_dist = 0.0;
 		
 		for(Task t: ts) {
-			total_dist = total_dist + t.pickupCity.distanceTo(t.deliveryCity);
+			total_dist += t.pickupCity.distanceTo(t.deliveryCity);
 		}
 		return total_dist * state.getCostKm();
 	}
@@ -68,6 +68,9 @@ public class Astar {
 						return (int)Double.compare(s1.getCurrentCost() + calculateHeuristic(s1), 
 								s2.getCurrentCost() + calculateHeuristic(s2));
 					case DISTANCE2:
+						return (int)Double.compare(s1.getCurrentCost() + calculateHeuristic2(s1), 
+								s2.getCurrentCost() + calculateHeuristic2(s2));
+					case DISTANCE3:
 						return (int)Double.compare(s1.getCurrentCost() + calculateHeuristic2(s1), 
 								s2.getCurrentCost() + calculateHeuristic2(s2));
 					default:
@@ -95,7 +98,6 @@ public class Astar {
             nSteps += 1;
             state = queue.poll();
             
-            //if(nSteps > 10) throw new IllegalStateException("FINISH");
             if (!visited_states.containsKey(state.hashCode()) || comparator.isSmaller(state, visited_states.get(state.hashCode()))) {
             	visited_states.put(state.hashCode(), state);
             	queue.addAll(state.getPossibleStates());
@@ -103,10 +105,11 @@ public class Astar {
         }
 
         if (!state.isFinalState()) {
-            throw new IllegalStateException("ASTAR did not find any final state");
+            throw new IllegalStateException("Error: No final state found");
         }
 		
-		System.out.println("A plan was found in " + nSteps + state.toPlan().toString());
+		System.out.println("Plan found after steps: " + nSteps );
+		System.out.println("The plan is: " + state.toPlan().toString());
 		return state.toPlan();
 	}
 		
