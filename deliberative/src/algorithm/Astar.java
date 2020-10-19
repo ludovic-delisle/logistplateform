@@ -16,7 +16,7 @@ public class Astar {
 		List<State> state_list = new ArrayList<State>();
 		state_list.add(state);
 		for(State st: state_list) {
-			List<State> ss = new ArrayList<State>(st.getNextStates());
+			List<State> ss = new ArrayList<State>(st.getPossibleStates());
 			
 			for(State s: ss) {
 				if(s.isFinalState()) {
@@ -81,26 +81,24 @@ public class Astar {
 				else return false;
             }
         } 
-		
-		Comparator<State> statesComparator = (s1, s2) -> {
-                   return Double.compare(s1.getCurrentCost(), s2.getCurrentCost());
-            };
-		
-		StateComparator comparator = new StateComparator();		
-		PriorityQueue<State> queue = new PriorityQueue<State>(statesComparator);
-		Map<Integer, State> visited_states = new HashMap<Integer, State>();
-		queue.add(startState);
-			
+	
 		int nSteps = 0;
         State state = startState;
+		StateComparator comparator = new StateComparator();		
+		PriorityQueue<State> queue = new PriorityQueue<State>(comparator);
+		Map<Integer, State> visited_states = new HashMap<Integer, State>();
+		
+		queue.add(state);
+		
         while (!state.isFinalState() && !queue.isEmpty()) {
+        	//System.out.println("size "+queue.size());
             nSteps += 1;
             state = queue.poll();
-           
+            
+            //if(nSteps > 10) throw new IllegalStateException("FINISH");
             if (!visited_states.containsKey(state.hashCode()) || comparator.isSmaller(state, visited_states.get(state.hashCode()))) {
             	visited_states.put(state.hashCode(), state);
-            	queue.addAll(state.getNextStates());
-            	System.out.println("size "+queue.size());
+            	queue.addAll(state.getPossibleStates());
             }
         }
 
@@ -108,8 +106,7 @@ public class Astar {
             throw new IllegalStateException("ASTAR did not find any final state");
         }
 		
-		System.out.println("A plan was found in " + nSteps);
-
+		System.out.println("A plan was found in " + nSteps + state.toPlan().toString());
 		return state.toPlan();
 	}
 		

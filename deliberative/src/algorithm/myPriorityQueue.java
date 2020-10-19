@@ -56,7 +56,7 @@ public class myPriorityQueue extends PriorityQueue<State> {
 	public void add_all(Queue<State> queue) {
 		for(State state : queue) {
 	            states_queue.add(state);
-	        }
+	       }
 	}
 	
 	public void add_no_check(State state) {
@@ -64,9 +64,7 @@ public class myPriorityQueue extends PriorityQueue<State> {
 	}
 	
 	public boolean compare(State state) {
-		if (!visited_states.containsKey(state) || state.getCurrentCost() < visited_states.get(state).getCurrentCost()) {
-	         return true;
-	     }else return false;
+		return !visited_states.containsKey(state) || state.getCurrentCost() < visited_states.get(state).getCurrentCost(); 
 	}
 	
 	@Override
@@ -79,8 +77,7 @@ public class myPriorityQueue extends PriorityQueue<State> {
     }
 	@Override
 	public State poll() {
-	    State state = states_queue.poll();
-		return state;
+		return states_queue.poll();
 	}
 	@Override
     public int size() {

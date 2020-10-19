@@ -1,36 +1,38 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
-import actions.Action;
-import actions.Pickup;
-import actions.Delivery;
-import actions.Move;
+import logist.plan.Action;
 import logist.plan.Plan;
+import logist.plan.Action.*;
 import logist.task.TaskSet;
-import logist.topology.Topology;
 import logist.topology.Topology.City;
 import logist.simulation.Vehicle;
 import logist.task.Task;
 
-public class State implements Comparable<State>{
-	private Vehicle vehicle;
-	private double current_cost=0;
-	private TaskSet available_tasks;
-	private TaskSet current_tasks=null;
-	private int remainingCapacity;
-	private City current_city;
-	List<Action> previous_actions=new ArrayList<Action>();
+public class State{
 	
-	public State(Vehicle vehicle, double current_cost, TaskSet available_tasks, TaskSet current_tasks, int remainingCapacity,
-			List<Action> previous_actions) {
+	private Vehicle vehicle=null;
+	private double current_cost=0;
+	private TaskSet available_tasks=null;
+	private TaskSet current_tasks=null;
+	private int remainingCapacity=0;
+	private City current_city=null;
+	private Queue<Action> previous_actions= new LinkedList<Action>();
+	
+	
+	public State(Vehicle vehicle, double current_cost, TaskSet available_tasks, TaskSet current_tasks, int remainingCapacity, 
+			City city, Queue<Action> l) {
 		this.vehicle = vehicle;
 		this.current_cost = current_cost;
 		this.available_tasks = available_tasks;
 		this.current_tasks = current_tasks;
 		this.remainingCapacity = remainingCapacity;
-		this.previous_actions = previous_actions;
+		this.current_city=city;
+		this.previous_actions= new LinkedList<Action>(l);
 	}
 	
 	//constructor initial state
@@ -38,141 +40,8 @@ public class State implements Comparable<State>{
 			this.vehicle=vehicle;
 			this.available_tasks=tasks;
 			this.current_tasks=vehicle.getCurrentTasks();
-			this.setRemainingCapacity(vehicle.capacity());
+			this.remainingCapacity=vehicle.capacity();
 			this.current_city=vehicle.getCurrentCity();
-			this.previous_actions = new ArrayList<>();
-	}
-	
-	//constructor for action move
-	public State(City city, State old_state,Double cost, List<Action> actions) {
-			this.vehicle=old_state.getVehicle();
-			this.available_tasks=old_state.getTasks();
-			this.current_tasks= old_state.getCurrentTasks();
-			this.setRemainingCapacity(vehicle.capacity());
-			this.current_city=city;
-			this.current_cost+=cost;
-			this.previous_actions=actions;
-	}
-		
-	//constructor for action pickup
-	public State(State old_state, TaskSet available_tasks, TaskSet current_tasks, Integer weight_to_add, List<Action> actions) {
-			this.vehicle=old_state.getVehicle();
-			this.available_tasks=available_tasks;
-			this.current_tasks= current_tasks;
-			this.setRemainingCapacity(vehicle.capacity()+ weight_to_add);
-			this.current_city=old_state.getCurrentCity();
-			this.previous_actions=actions;
-			this.current_cost=old_state.getCurrentCost();
-	}
-		
-		//constructor for action delivery
-	public State(State old_state, TaskSet current_tasks, Integer weight_to_drop, List<Action> actions) {
-			this.vehicle=old_state.getVehicle();
-			this.available_tasks=old_state.getTasks();
-			this.current_tasks= current_tasks;
-			this.setRemainingCapacity(vehicle.capacity() - weight_to_drop);
-			this.current_city=old_state.getCurrentCity();
-			this.previous_actions=actions;
-			this.current_cost=old_state.getCurrentCost();
-		}
-	
-	public Plan toPlan() {
-		List<Action> temp_act_list = this.getActionList();
-		List<logist.plan.Action> act_list = new ArrayList<logist.plan.Action>();
-		for(Action a : temp_act_list) {
-			act_list.add(a.getResultingAction());
-		}
-
-		return new Plan(this.getCurrentCity(), act_list);
-	}
-	
-	public List<State> getNextStates() {
-		List<Action> act_list = new ArrayList<>(this.getPossibleActions());
-		List<State> state_list = new ArrayList<State>();
-		for(Action a : act_list) {
-			state_list.add(a.getResultingState(this));
-		}
-		return state_list;
-    }
-	
-	public List<Action> getPossibleActions() {
-
-        List<Action> possibleActions = new ArrayList<>();
-        List<City> moveActions = new ArrayList<>();
-        
-        //first we get all the cities where we could deliver a task
-        for (Task task : current_tasks) {
-            if (task.deliveryCity == this.getCurrentCity()) {
-                possibleActions.add(new Delivery(task));
-                return possibleActions;
-            } else { 
-            	// If we cannot deliver a task in that city, we can simply move to it
-            	moveActions.add(this.getCurrentCity().pathTo(task.deliveryCity).get(0));
-            }
-        }
-
-        for (Task task : available_tasks) {
-            if (task.weight <= remainingCapacity) {
-            	//then we get all the cities where we could pickup a task
-                if (task.pickupCity == this.getCurrentCity()) { 
-                    possibleActions.add(new Pickup(task));
-                } else { 
-                	// If we cannot pickup a task in that city, we can simply move to it
-                    moveActions.add(this.getCurrentCity().pathTo(task.pickupCity).get(0));
-                }
-            }
-        }
-
-        // Finally, we create the move actions for all the remaining cities
-        for (Topology.City city : moveActions) {
-            possibleActions.add(new Move(this.getCurrentCity(), city, this.getCostKm()));
-        }
-
-        return possibleActions;
-    }
-
-	public City getCurrentCity(){
-		return current_city;
-	}
-	public TaskSet getTasks() {
-		return available_tasks;
-	}
-	public TaskSet getCurrentTasks() {
-		return current_tasks;
-	}
-	public double getCurrentCost() {
-		return current_cost;
-	}
-	public void setCurrentCost(double cost) {
-		this.current_cost = cost;
-	}
-	public Vehicle getVehicle() {
-		return vehicle;
-	}
-	public boolean isFinalState() {
-		return this.current_tasks.isEmpty() && this.available_tasks.isEmpty();
-	}
-	public int getRemainingCapacity() {
-		return remainingCapacity;
-	}
-	public void setRemainingCapacity(int remainingCapacity) {
-		this.remainingCapacity = remainingCapacity;
-	}
-	public int getCostKm() {
-		return this.vehicle.costPerKm();
-	}
-	public double getSpeed() {
-		return this.vehicle.speed();
-	}
-	public void updateActionList(List<Action> act_list) {
-		this.previous_actions = act_list;
-	}
-	public List<Action> getActionList() {
-		return this.previous_actions;
-	}
-	@Override
-	public int compareTo(State state) {
-		return (int) this.getCurrentCost() - (int)state.getCurrentCost();
 	}
 	
 	@Override
@@ -182,6 +51,7 @@ public class State implements Comparable<State>{
 		result = prime * result + ((available_tasks == null) ? 0 : available_tasks.hashCode());
 		result = prime * result + ((current_city == null) ? 0 : current_city.hashCode());
 		result = prime * result + ((current_tasks == null) ? 0 : current_tasks.hashCode());
+		result = prime * result + remainingCapacity;
 		return result;
 	}
 
@@ -209,17 +79,116 @@ public class State implements Comparable<State>{
 				return false;
 		} else if (!current_tasks.equals(other.current_tasks))
 			return false;
+		if (remainingCapacity != other.remainingCapacity)
+			return false;
 		return true;
 	}
-	
-	
-	public boolean same_state(State state) {
-		if(this.remainingCapacity != state.getRemainingCapacity()
-				||this.current_city != state.getCurrentCity()
-				||this.available_tasks!= state.getTasks()
-				||this.current_tasks!= state.getCurrentTasks()) {
-			return false;
+
+	public State(State state) {
+		this.vehicle = state.vehicle;
+		this.current_cost=state.current_cost;
+		this.available_tasks=state.available_tasks.clone();
+		this.current_tasks=state.current_tasks.clone();
+		this.remainingCapacity=new Integer(state.remainingCapacity);
+		this.current_city=state.current_city;
+		this.previous_actions=new LinkedList<Action>(state.previous_actions);
+	}
+
+	//constructor for action move
+	public State move(City next_city) {
+			State resulting_state = new State(this);
+			resulting_state.current_cost+=this.getCostKm()*next_city.distanceTo(this.getCurrentCity());
+			resulting_state.previous_actions.add(new Move(next_city));
+			resulting_state.current_city=next_city;
+			return resulting_state;
+	}
+		
+	//constructor for action pickup
+	public State pickup(Task task) {
+			State resulting_state = new State(this);
+			resulting_state.previous_actions.add(new Pickup(task));
+			resulting_state.available_tasks.remove(task);
+			resulting_state.current_tasks.add(task);
+			resulting_state.remainingCapacity-=task.weight;
+			return resulting_state;
+	}
+		
+		//constructor for action delivery
+	public State delivery(Task task) {
+			State resulting_state = new State(this);
+			resulting_state.previous_actions.add(new Delivery(task));
+			resulting_state.current_tasks.remove(task);
+			resulting_state.remainingCapacity+=task.weight;
+			return resulting_state;
 		}
-		return true;
+	
+	public List<State> getPossibleStates() {
+
+        List<State> possibleStates = new ArrayList<>();
+        //first we get all the cities where we could deliver a task
+        for (Task task : current_tasks) {
+            if (task.deliveryCity == this.getCurrentCity()) {
+            	possibleStates.add(delivery(task));
+            }
+        }
+        for (Task task : available_tasks) {
+            if (task.weight <= this.remainingCapacity && task.pickupCity == this.getCurrentCity()) {
+            	//then we get all the cities where we could pickup a task
+              possibleStates.add(pickup(task));
+            }
+        } 
+        for(City neighbor : this.getCurrentCity().neighbors()) {
+        	possibleStates.add(move(neighbor));
+        }
+
+        return possibleStates;
+    }
+	
+	public Plan toPlan() {
+		List<Action> act_list = new ArrayList<Action>();
+		act_list.addAll(previous_actions);
+		
+		return new Plan(this.getCurrentCity(), act_list);
+	}
+
+	public City getCurrentCity(){
+		return current_city;
+	}
+	public TaskSet getTasks() {
+		return available_tasks;
+	}
+	public TaskSet getCurrentTasks() {
+		return current_tasks;
+	}
+	public double getCurrentCost() {
+		return current_cost;
+	}
+	public void setCurrentCost(double cost) {
+		this.current_cost = cost;
+	}
+	public Vehicle getVehicle() {
+		return vehicle;
+	}
+	public boolean isFinalState() {
+		
+		return this.current_tasks.isEmpty() && this.available_tasks.isEmpty();
+	}
+	public int getRemainingCapacity() {
+		return remainingCapacity;
+	}
+	public void setRemainingCapacity(int remainingCapacity) {
+		this.remainingCapacity = remainingCapacity;
+	}
+	public int getCostKm() {
+		return this.vehicle.costPerKm();
+	}
+	public double getSpeed() {
+		return this.vehicle.speed();
+	}
+	public Action getLastAction() {
+			return previous_actions.peek();
+	}
+	public Queue<Action> getActions(){
+		return previous_actions;
 	}
 }

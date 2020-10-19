@@ -13,7 +13,7 @@ public class BFS {
 		start_queue.add(startingState);
 		myPriorityQueue queue =new myPriorityQueue(start_queue);
 		queue.visit_state(startingState);
-		queue.add_all_possible_states_to_queue(startingState.getNextStates());
+		queue.add_all_possible_states_to_queue(startingState.getPossibleStates());
 		State bestState=null;
 		
 		System.out.println(queue.size());
@@ -27,7 +27,7 @@ public class BFS {
 	    	State best_state_candidat = queue.poll();
 	    	if (!queue.isVisited(best_state_candidat)) {
 	    		queue.visit_state(best_state_candidat);
-                queue.add_all_possible_states_to_queue(best_state_candidat.getNextStates());
+                queue.add_all_possible_states_to_queue(best_state_candidat.getPossibleStates());
             }
             if (best_state_candidat.isFinalState() && (bestState == null || best_state_candidat.getCurrentCost() < bestState.getCurrentCost())) {
                 bestState = best_state_candidat;
