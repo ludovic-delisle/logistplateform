@@ -71,25 +71,36 @@ public class Astar {
 						return (int)Double.compare(s1.getCurrentCost() + calculateHeuristic2(s1), 
 								s2.getCurrentCost() + calculateHeuristic2(s2));
 					default:
-						return (int)Double.compare(s1.getCurrentCost(), s2.getCurrentCost());
+						return (int)Integer.compare((int)s1.getCurrentCost(), (int)s2.getCurrentCost());
 				}
+            }
+			
+			public boolean isSmaller(State s1, State s2) {
+				//we order our priority queue according to the total cost (currentCost + heuristic cost)
+				if(s1.getCurrentCost() < s2.getCurrentCost()) return true;
+				else return false;
             }
         } 
 		
+		Comparator<State> statesComparator = (s1, s2) -> {
+                   return Double.compare(s1.getCurrentCost(), s2.getCurrentCost());
+            };
+		
 		StateComparator comparator = new StateComparator();		
-		myPriorityQueue queue = new myPriorityQueue(new PriorityQueue<>(comparator));
-		queue.visit_state(startState);
-		queue.add_no_check(startState);
-		queue.add_all_possible_states_to_queue(startState.getNextStates());
+		PriorityQueue<State> queue = new PriorityQueue<State>(statesComparator);
+		Map<Integer, State> visited_states = new HashMap<Integer, State>();
+		queue.add(startState);
 			
 		int nSteps = 0;
         State state = startState;
         while (!state.isFinalState() && !queue.isEmpty()) {
             nSteps += 1;
             state = queue.poll();
-            if (!queue.isVisited(state)) {
-            	queue.visit_state(state);
-            	queue.add_all_possible_states_to_queue(state.getNextStates());
+           
+            if (!visited_states.containsKey(state.hashCode()) || comparator.isSmaller(state, visited_states.get(state.hashCode()))) {
+            	visited_states.put(state.hashCode(), state);
+            	queue.addAll(state.getNextStates());
+            	System.out.println("size "+queue.size());
             }
         }
 
@@ -98,10 +109,8 @@ public class Astar {
         }
 		
 		System.out.println("A plan was found in " + nSteps);
-		
-		Plan p = state.toPlan();
 
-		return p;
+		return state.toPlan();
 	}
 		
 }

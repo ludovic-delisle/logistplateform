@@ -49,8 +49,12 @@ public class myPriorityQueue extends PriorityQueue<State> {
 		}
 	}
 	
-	public void add_all(List<State> possible_states) {
-		for(State state : possible_states) {
+	public Queue<State> get_all_states() {
+		return states_queue;
+	}
+	
+	public void add_all(Queue<State> queue) {
+		for(State state : queue) {
 	            states_queue.add(state);
 	        }
 	}

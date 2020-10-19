@@ -175,26 +175,44 @@ public class State implements Comparable<State>{
 		return (int) this.getCurrentCost() - (int)state.getCurrentCost();
 	}
 	
-	public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        State that = (State) o;
-
-        if (remainingCapacity != that.getRemainingCapacity()) return false;
-        if (current_city != null ? !current_city.equals(that.current_city) : that.current_city != null) return false;
-        if (current_tasks != null ? !current_tasks.equals(that.current_tasks) : that.current_tasks != null) return false;
-        return available_tasks != null ? available_tasks.equals(that.available_tasks) : that.available_tasks == null;
-    }
-	
 	@Override
-    public int hashCode() {
-        int result = current_city != null ? current_city.hashCode() : 0;
-        result = 31 * result + (current_tasks != null ? current_tasks.hashCode() : 0);
-        result = 31 * result + remainingCapacity;
-        result = 31 * result + (available_tasks != null ? available_tasks.hashCode() : 0);
-        return result;
-    }
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((available_tasks == null) ? 0 : available_tasks.hashCode());
+		result = prime * result + ((current_city == null) ? 0 : current_city.hashCode());
+		result = prime * result + ((current_tasks == null) ? 0 : current_tasks.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		State other = (State) obj;
+		if (available_tasks == null) {
+			if (other.available_tasks != null)
+				return false;
+		} else if (!available_tasks.equals(other.available_tasks))
+			return false;
+		if (current_city == null) {
+			if (other.current_city != null)
+				return false;
+		} else if (!current_city.equals(other.current_city))
+			return false;
+		if (current_tasks == null) {
+			if (other.current_tasks != null)
+				return false;
+		} else if (!current_tasks.equals(other.current_tasks))
+			return false;
+		return true;
+	}
+	
+	
 	public boolean same_state(State state) {
 		if(this.remainingCapacity != state.getRemainingCapacity()
 				||this.current_city != state.getCurrentCity()
