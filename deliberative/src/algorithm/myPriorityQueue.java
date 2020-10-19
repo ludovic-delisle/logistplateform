@@ -48,18 +48,21 @@ public class myPriorityQueue extends PriorityQueue<State> {
 	        }
 		}
 	}
-	public double calculateHeuristic(State state) {
-		return 0.0;
+	
+	public void add_all(List<State> possible_states) {
+		for(State state : possible_states) {
+	            states_queue.add(state);
+	        }
+	}
+	
+	public void add_no_check(State state) {
+	        states_queue.add(state);
 	}
 	
 	public boolean compare(State state) {
-		double state_cost = state.getCurrentCost() + calculateHeuristic(state);
-		if(!visited_states.containsKey(state)) return true;
-		else {
-			double queue_state_cost = visited_states.get(state).getCurrentCost() + calculateHeuristic(visited_states.get(state));
-			if(state_cost < queue_state_cost) return true;
-			else return false;
-		}
+		if (!visited_states.containsKey(state) || state.getCurrentCost() < visited_states.get(state).getCurrentCost()) {
+	         return true;
+	     }else return false;
 	}
 	
 	@Override

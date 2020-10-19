@@ -25,7 +25,7 @@ import algorithm.BFS;
 public class DeliberativeTemplate implements DeliberativeBehavior {
 
 	enum Algorithm { BFS, ASTAR }
-	public enum Heuristic { NONE, DISTANCE }
+	public enum Heuristic { NONE, DISTANCE, DISTANCE2 }
 	
 	/* Environment */
 	Topology topology;
