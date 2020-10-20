@@ -1,6 +1,7 @@
 package algorithm;
 
 import logist.plan.Plan;
+import logist.topology.Topology.City;
 import model.State;
 
 import java.util.LinkedList;
@@ -14,10 +15,8 @@ public class BFS {
 		myPriorityQueue queue =new myPriorityQueue(start_queue);
 		queue.visit_state(startingState);
 		queue.add_all_possible_states_to_queue(startingState.getPossibleStates());
-		State bestState=null;
-		
-		System.out.println(queue.size());
-		
+		City startCity = startingState.getCurrentCity();
+		State bestState=null;		
 		 
 	    if (startingState.isFinalState()) {
 	    	bestState = startingState;
@@ -35,6 +34,6 @@ public class BFS {
 	    	
 	    }
 	
-	return bestState.toPlan();
+	return bestState.toPlan(startCity);
 	}
 }

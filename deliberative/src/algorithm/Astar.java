@@ -20,7 +20,7 @@ public class Astar {
 			
 			for(State s: ss) {
 				if(s.isFinalState()) {
-					return state.toPlan().totalDistance() * state.getCostKm();
+					return state.toPlan(state.getCurrentCity()).totalDistance() * state.getCostKm();
 				}
 			}
 		}
@@ -90,14 +90,16 @@ public class Astar {
 		StateComparator comparator = new StateComparator();		
 		PriorityQueue<State> queue = new PriorityQueue<State>(comparator);
 		Map<Integer, State> visited_states = new HashMap<Integer, State>();
+		City startCity = startState.getCurrentCity();
 		
 		queue.add(state);
 		
         while (!state.isFinalState() && !queue.isEmpty()) {
-        	//System.out.println("size "+queue.size());
             nSteps += 1;
             state = queue.poll();
             
+            //if(nSteps <30) state.carrying();
+            if(nSteps <40) System.out.println("is: " + state.toPlan(startCity).toString() + " Cost: " + state.getCurrentCost() + " dist: " + state.toPlan(startCity).totalDistance());
             if (!visited_states.containsKey(state.hashCode()) || comparator.isSmaller(state, visited_states.get(state.hashCode()))) {
             	visited_states.put(state.hashCode(), state);
             	queue.addAll(state.getPossibleStates());
@@ -109,8 +111,8 @@ public class Astar {
         }
 		
 		System.out.println("Plan found after steps: " + nSteps );
-		System.out.println("The plan is: " + state.toPlan().toString());
-		return state.toPlan();
+		System.out.println("The plan is: " + state.toPlan(startCity).toString());
+		return state.toPlan(startCity);
 	}
 		
 }

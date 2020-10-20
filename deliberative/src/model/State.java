@@ -23,24 +23,12 @@ public class State{
 	private City current_city=null;
 	private Queue<Action> previous_actions= new LinkedList<Action>();
 	
-	
-	public State(Vehicle vehicle, double current_cost, TaskSet available_tasks, TaskSet current_tasks, int remainingCapacity, 
-			City city, Queue<Action> l) {
-		this.vehicle = vehicle;
-		this.current_cost = current_cost;
-		this.available_tasks = available_tasks;
-		this.current_tasks = current_tasks;
-		this.remainingCapacity = remainingCapacity;
-		this.current_city=city;
-		this.previous_actions= new LinkedList<Action>(l);
-	}
-	
 	//constructor initial state
 	public State(Vehicle vehicle, TaskSet tasks) {
 			this.vehicle=vehicle;
-			this.available_tasks=tasks;
-			this.current_tasks=vehicle.getCurrentTasks();
-			this.remainingCapacity=vehicle.capacity();
+			this.available_tasks=tasks.clone();
+			this.current_tasks=vehicle.getCurrentTasks().clone();
+			this.remainingCapacity=new Integer(vehicle.capacity());
 			this.current_city=vehicle.getCurrentCity();
 	}
 	
@@ -51,7 +39,6 @@ public class State{
 		result = prime * result + ((available_tasks == null) ? 0 : available_tasks.hashCode());
 		result = prime * result + ((current_city == null) ? 0 : current_city.hashCode());
 		result = prime * result + ((current_tasks == null) ? 0 : current_tasks.hashCode());
-		result = prime * result + remainingCapacity;
 		return result;
 	}
 
@@ -86,11 +73,11 @@ public class State{
 
 	public State(State state) {
 		this.vehicle = state.vehicle;
-		this.current_cost=state.current_cost;
+		this.current_cost=new Double(state.current_cost);
 		this.available_tasks=state.available_tasks.clone();
 		this.current_tasks=state.current_tasks.clone();
 		this.remainingCapacity=new Integer(state.remainingCapacity);
-		this.current_city=state.current_city;
+		this.current_city= state.current_city;
 		this.previous_actions=new LinkedList<Action>(state.previous_actions);
 	}
 
@@ -144,11 +131,11 @@ public class State{
         return possibleStates;
     }
 	
-	public Plan toPlan() {
+	public Plan toPlan(City startCity) {
 		List<Action> act_list = new ArrayList<Action>();
 		act_list.addAll(previous_actions);
 		
-		return new Plan(this.getCurrentCity(), act_list);
+		return new Plan(startCity, act_list);
 	}
 
 	public City getCurrentCity(){
@@ -190,5 +177,15 @@ public class State{
 	}
 	public Queue<Action> getActions(){
 		return previous_actions;
+	}
+	public void carrying() {
+		double res=0.0;
+		System.out.print("Tasks ");
+		for(Task t:this.getCurrentTasks()) {
+			res+=t.weight;
+			System.out.print("id: "+t.id+ " wght: "+t.weight+ "  ");
+		}
+		System.out.println("");
+		System.out.println(" Wght carr: " + res + " check: " + this.getCurrentTasks().weightSum()+ " rem: "+this.getRemainingCapacity());
 	}
 }

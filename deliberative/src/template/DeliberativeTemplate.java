@@ -64,16 +64,25 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		switch (algorithm) {
 		case ASTAR:
 			State state = new State(vehicle, tasks);
+			final long startTime = System.currentTimeMillis();
 			
 			plan = Astar.run(state, heuristic);
+			final long endTime = System.currentTimeMillis();
 			System.out.println("ASTAR  has total distance of: " + plan.totalDistance() + " km");
+			System.out.println("ASTAR  plan creation took: " + (endTime - startTime)+ " ms");
 			break;
 			
 		case BFS:
 			
 			State state_2 = new State(vehicle, tasks);
+			final long startTime1 = System.currentTimeMillis();
+
 			plan = BFS.find_best_plan(state_2);
+			final long endTime1 = System.currentTimeMillis();
+
 			System.out.println("BFS  has total distance of: " + plan.totalDistance() + " km");
+			System.out.println("BFS  plan creation took: " + (endTime1 - startTime1)+ " ms");
+
 			break;
 		default:
 			throw new AssertionError("Should not happen.");
