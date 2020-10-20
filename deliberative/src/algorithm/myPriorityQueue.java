@@ -1,10 +1,10 @@
 package algorithm;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.List;
 import model.State;
 
 
@@ -17,6 +17,10 @@ public class myPriorityQueue extends PriorityQueue<State> {
 	 */
 	private static final long serialVersionUID = 1L;
 	
+	public myPriorityQueue(Comparator<State> comp) {
+		this.states_queue=new PriorityQueue<State>(comp);
+		this.visited_states = new HashMap<State,State>();
+    }  
 	
 	public myPriorityQueue(Queue<State> startingState) {
 		this.states_queue=startingState;
@@ -34,30 +38,13 @@ public class myPriorityQueue extends PriorityQueue<State> {
 	
 	@Override
 	public boolean add(State state) {
-		if (!visited_states.containsKey(state) || state.getCurrentCost() < visited_states.get(state).getCurrentCost()) {
-	           states_queue.add(state);
-	           return true;
-	       }
-		return false;
-	}
-	
-	public void add_all_possible_states_to_queue(List<State> possible_states) {
-		for(State state : possible_states) {
-			if (!visited_states.containsKey(state) || state.getCurrentCost() < visited_states.get(state).getCurrentCost()) {
-	            states_queue.add(state);
-	        }
-		}
+	       return states_queue.add(state);
 	}
 	
 	public Queue<State> get_all_states() {
 		return states_queue;
 	}
-	
-	public void add_all(Queue<State> queue) {
-		for(State state : queue) {
-	            states_queue.add(state);
-	       }
-	}
+
 	
 	public void add_no_check(State state) {
 	        states_queue.add(state);
@@ -82,6 +69,9 @@ public class myPriorityQueue extends PriorityQueue<State> {
 	@Override
     public int size() {
         return states_queue.size();
+    }
+	public State get(State key) {
+        return visited_states.get(key);
     }
 
 }

@@ -10,11 +10,9 @@ import java.util.Queue;
 public class BFS {
 	
 	public static Plan find_best_plan(State startingState) {
-		Queue<State> start_queue = new LinkedList<>();
+		Queue<State> start_queue = new LinkedList<State>();
 		start_queue.add(startingState);
-		myPriorityQueue queue =new myPriorityQueue(start_queue);
-		queue.visit_state(startingState);
-		queue.add_all_possible_states_to_queue(startingState.getPossibleStates());
+		myPriorityQueue queue = new myPriorityQueue(start_queue);
 		City startCity = startingState.getCurrentCity();
 		State bestState=null;		
 		 
@@ -26,7 +24,7 @@ public class BFS {
 	    	State best_state_candidat = queue.poll();
 	    	if (!queue.isVisited(best_state_candidat)) {
 	    		queue.visit_state(best_state_candidat);
-                queue.add_all_possible_states_to_queue(best_state_candidat.getPossibleStates());
+                queue.addAll(best_state_candidat.getPossibleStates());
             }
             if (best_state_candidat.isFinalState() && (bestState == null || best_state_candidat.getCurrentCost() < bestState.getCurrentCost())) {
                 bestState = best_state_candidat;

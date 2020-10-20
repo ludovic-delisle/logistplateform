@@ -91,6 +91,11 @@ public class State{
 	}
 		
 	//constructor for action pickup
+	/**
+	 * 
+	 * @param task
+	 * @return
+	 */
 	public State pickup(Task task) {
 			State resulting_state = new State(this);
 			resulting_state.previous_actions.add(new Pickup(task));
@@ -100,7 +105,12 @@ public class State{
 			return resulting_state;
 	}
 		
-		//constructor for action delivery
+	//constructor for action delivery
+	/**
+	 * 
+	 * @param task
+	 * @return
+	 */
 	public State delivery(Task task) {
 			State resulting_state = new State(this);
 			resulting_state.previous_actions.add(new Delivery(task));
@@ -178,7 +188,7 @@ public class State{
 	public Queue<Action> getActions(){
 		return previous_actions;
 	}
-	public void carrying() {
+	public void print_carrying() {
 		double res=0.0;
 		System.out.print("Tasks ");
 		for(Task t:this.getCurrentTasks()) {
