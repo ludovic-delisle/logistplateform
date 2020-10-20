@@ -23,7 +23,11 @@ public class State{
 	private City current_city=null;
 	private Queue<Action> previous_actions= new LinkedList<Action>();
 	
-	//constructor initial state
+	/**
+	 * constructor called from the class DeliberativeTemplate. used to create the first state
+	 * @param vehicle vehicle of the agent 
+	 * @param tasks taskeset of the tasks available in the environment
+	 */
 	public State(Vehicle vehicle, TaskSet tasks) {
 			this.vehicle=vehicle;
 			this.available_tasks=tasks.clone();
@@ -70,7 +74,10 @@ public class State{
 			return false;
 		return true;
 	}
-
+	/**
+	 * Constructor used when creating a new state after an action
+	 * @param state state that we are copying
+	 */
 	public State(State state) {
 		this.vehicle = state.vehicle;
 		this.current_cost=new Double(state.current_cost);
@@ -81,7 +88,11 @@ public class State{
 		this.previous_actions=new LinkedList<Action>(state.previous_actions);
 	}
 
-	//constructor for action move
+	/**
+	 * Action method move
+	 * @param next_city is the city where the agent will move
+	 * @return the state expected after the action
+	 */
 	public State move(City next_city) {
 			State resulting_state = new State(this);
 			resulting_state.current_cost+=this.getCostKm()*next_city.distanceTo(this.getCurrentCity());
@@ -90,11 +101,11 @@ public class State{
 			return resulting_state;
 	}
 		
-	//constructor for action pickup
+	
 	/**
-	 * 
-	 * @param task
-	 * @return
+	 * Action method pickup
+	 * @param task that the agent picks up
+	 * @return the state expected after the action
 	 */
 	public State pickup(Task task) {
 			State resulting_state = new State(this);
@@ -105,11 +116,11 @@ public class State{
 			return resulting_state;
 	}
 		
-	//constructor for action delivery
+	
 	/**
-	 * 
-	 * @param task
-	 * @return
+	 * Action method delivery
+	 * @param task that the agent delivers
+	 * @return the state expected after the action
 	 */
 	public State delivery(Task task) {
 			State resulting_state = new State(this);
@@ -119,6 +130,10 @@ public class State{
 			return resulting_state;
 		}
 	
+	/**
+	 * Method that finds all the possible next states that can come after this state
+	 * @return  all the possible next states that can come after this state
+	 */
 	public List<State> getPossibleStates() {
 
         List<State> possibleStates = new ArrayList<>();
@@ -141,13 +156,18 @@ public class State{
         return possibleStates;
     }
 	
+	/**
+	 * Converts the list of actions of this state and the city where it all begun into a plan
+	 * @param startCity the city where the agent starts the plan
+	 * @return the plan that logist can use
+	 */
 	public Plan toPlan(City startCity) {
 		List<Action> act_list = new ArrayList<Action>();
 		act_list.addAll(previous_actions);
 		
 		return new Plan(startCity, act_list);
 	}
-
+	
 	public City getCurrentCity(){
 		return current_city;
 	}
@@ -166,6 +186,13 @@ public class State{
 	public Vehicle getVehicle() {
 		return vehicle;
 	}
+	/**
+	 * A final state means that:
+	 * 	- there are no more available tasks in the environment
+	 * 	- the agent is carrying no task
+	 * thus any additional action would just increase the cost
+	 * @return if this state is a final state
+	 */
 	public boolean isFinalState() {
 		
 		return this.current_tasks.isEmpty() && this.available_tasks.isEmpty();
