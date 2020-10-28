@@ -11,8 +11,26 @@ import logist.task.Task;
 
 public class LocalSearch {
 	private List<Vehicle> vehicles;
-	private NextTasks current_plan;
 	private TaskSet availableTasks;
+	
+	LocalSearch(List<Vehicle> vehicles1, TaskSet availableTasks1){
+		this.vehicles = vehicles1;
+		this.availableTasks = availableTasks1;
+	}
+	
+	public NextTasks SLSAlgo() {
+		NextTasks solution = new NextTasks(vehicles, availableTasks);
+		final long startTime = System.currentTimeMillis();
+		while(System.currentTimeMillis() - startTime < 10000) {
+			NextTasks candidate_solution = new NextTasks(solution);
+			List<NextTasks> A = new ArrayList<NextTasks>(choose_neighbours(candidate_solution));
+			candidate_solution = local_choice(A);
+			if(cost(candidate_solution) < cost(solution)) {
+				solution = candidate_solution;
+			}
+		}
+		return solution;
+	}
 	
 	public boolean checkConstraints(NextTasks nextTask) {
 		
@@ -45,20 +63,19 @@ public class LocalSearch {
 		return null;
 	}
 	
-	public NextTasks local_choice() {
-		List<NextTasks> res_list = new ArrayList<NextTasks>(choose_neighbours());
-		return res_list.stream().collect(Collectors.minBy(Comparator.comparing(i->cost(i)))).get();
+	public NextTasks local_choice(List<NextTasks> task_list) {
+		return task_list.stream().collect(Collectors.minBy(Comparator.comparing(i->cost(i)))).get();
 	}
 	
-	public List<NextTasks> choose_neighbours() {
+	public List<NextTasks> choose_neighbours(NextTasks initialSol) {
 		List<NextTasks> res_list = new ArrayList<NextTasks>();
 		for(Vehicle v: vehicles) {
-			for(Task t: current_plan.getCurrentTasks(v)) {
-				NextTasks n = current_plan.swap_task_order(v, t);
+			for(Task t: initialSol.getCurrentTasks(v)) {
+				NextTasks n = initialSol.swap_task_order(v, t);
 				if(checkConstraints(n)) res_list.add(n);
 				
 				for(Vehicle v2: vehicles) {
-					NextTasks n2 = current_plan.swap_task_vehicle(t, v, v2);
+					NextTasks n2 = initialSol.swap_task_vehicle(t, v, v2);
 					if(checkConstraints(n2)) res_list.add(n2);
 				}
 			}
@@ -81,3 +98,11 @@ public class LocalSearch {
 		return total_cost;
 	}
 }
+
+
+
+
+
+
+
+

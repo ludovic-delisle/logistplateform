@@ -60,14 +60,14 @@ public class CentralizedTemplate implements CentralizedBehavior {
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
         long time_start = System.currentTimeMillis();
-        
-//		System.out.println("Agent " + agent.id() + " has tasks " + tasks);
-        Plan planVehicle1 = naivePlan(vehicles.get(0), tasks);
-
+        LocalSearch SLS = new LocalSearch(vehicles, tasks);
+        NextTasks final_solution = SLS.SLSAlgo();
         List<Plan> plans = new ArrayList<Plan>();
-        plans.add(planVehicle1);
-        while (plans.size() < vehicles.size()) {
-            plans.add(Plan.EMPTY);
+        
+        for(Vehicle v: vehicles) {
+//			System.out.println("Agent " + agent.id() + " has tasks " + tasks);
+        	Plan planVehicle = naivePlan(v, final_solution.getCurrentTasks(v));
+        	plans.add(planVehicle);
         }
         
         long time_end = System.currentTimeMillis();
@@ -77,7 +77,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
         return plans;
     }
 
-    private Plan naivePlan(Vehicle vehicle, TaskSet tasks) {
+    private Plan naivePlan(Vehicle vehicle, List<Task> tasks) {
         City current = vehicle.getCurrentCity();
         Plan plan = new Plan(current);
 
@@ -102,3 +102,9 @@ public class CentralizedTemplate implements CentralizedBehavior {
         return plan;
     }
 }
+
+
+
+
+
+
