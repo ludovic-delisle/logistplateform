@@ -5,10 +5,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import logist.simulation.Vehicle;
 import logist.task.Task;
@@ -46,22 +42,40 @@ public class NextTasks {
 		for(Vehicle v: nextTask.keySet()) {
 			LinkedList<Task> ll_t = nextTask.get(v);
 			int idx = ll_t.indexOf(t);
-			if(idx > 0) return ll_t.get(idx + 1);
+			if(idx > -1) return ll_t.get(idx + 1);
 		}
 		return null; 
 	}
 	
-	public List<Task> get(Vehicle v) {
+	public Task get(Vehicle v, Task t) {
+		LinkedList<Task> ll_t = nextTask.get(v);
+		int idx = ll_t.indexOf(t);
+		if(idx > -1) return ll_t.get(idx + 1);
+		else throw new ArrayIndexOutOfBoundsException();
+	}
+	
+	public List<Task> getCurrentTasks(Vehicle v) {
 		return nextTask.get(v);
+	}
+	
+	public Task getFirstTask(Vehicle v) {
+		return nextTask.get(v).get(0);
 	}
 	
 	public Integer getTime(Task t) {
 		for(Vehicle v: nextTask.keySet()) {
 			LinkedList<Task> ll_t = nextTask.get(v);
 			int idx = ll_t.indexOf(t);
-			if(idx > 0) return idx+1;
+			if(idx > -1) return idx+1;
 		}
 		return 0;
+	}
+	
+	public Integer getTime(Vehicle v, Task t) {
+		LinkedList<Task> ll_t = nextTask.get(v);
+		int idx = ll_t.indexOf(t);
+		if(idx > -1) return idx+1;
+		else return 0;
 	}
 	
 	public Integer size() {
@@ -76,9 +90,17 @@ public class NextTasks {
 		for(Vehicle v: nextTask.keySet()) {
 			LinkedList<Task> ll_t = nextTask.get(v);
 			int idx = ll_t.indexOf(t1);
-			if(idx > 0) {
+			if(idx > -1) {
 				ll_t.add(idx, t2);
 			}
+		}
+	}
+	
+	public void put(Vehicle v, Task t1, Task t2) {
+		LinkedList<Task> ll_t = nextTask.get(v);
+		int idx = ll_t.indexOf(t1);
+		if(idx > -1) {
+			ll_t.add(idx, t2);
 		}
 	}
 	
@@ -86,23 +108,35 @@ public class NextTasks {
 		for(Vehicle v: nextTask.keySet()) {
 			LinkedList<Task> ll_t = nextTask.get(v);
 			int idx = ll_t.indexOf(t);
-			if(idx > 0) {
+			if(idx > -1) {
 				Collections.swap(ll_t, idx, idx+1);
 			}
 		}
+	}
+	
+	public NextTasks swap_task_order(Vehicle v, Task t) {
+		NextTasks res = new NextTasks(this);
+		LinkedList<Task> ll_t = res.nextTask.get(v);
+		int idx = ll_t.indexOf(t);
+		if(idx > -1) {
+			Collections.swap(ll_t, idx, idx+1);
+		}
+		return res;
 	}
 	
 	public Vehicle getVehicle(Task t) {
 		for(Vehicle v: nextTask.keySet()) {
 			LinkedList<Task> ll_t = nextTask.get(v);
 			int idx = ll_t.indexOf(t);
-			if(idx > 0) return v;
+			if(idx > -1) return v;
 		}
 		return null; 
 	}
 	
-	public void swap_task_vehicle(Task t, Vehicle v1, Vehicle v2) {
-		if(nextTask.get(v1).remove(t)) nextTask.get(v2).addFirst(t);
+	public NextTasks swap_task_vehicle(Task t, Vehicle v1, Vehicle v2) {
+		NextTasks res = new NextTasks(this);
+		if(res.getCurrentTasks(v1).remove(t)) res.getCurrentTasks(v2).add(0, t);
+		return res;
 	}
 	
 }

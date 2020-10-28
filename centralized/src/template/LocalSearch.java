@@ -1,11 +1,11 @@
 package template;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import logist.simulation.Vehicle;
-import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.task.Task;
 
@@ -19,16 +19,9 @@ public class LocalSearch {
 		for(Task t: availableTasks) {
 			if(nextTask.get(t) == t
 			|| nextTask.getTime(t) + 1 != nextTask.getTime(nextTask.get(t)) 
-			|| getVehicle(nextTask.get(t)) != getVehicle(t)) {
+			|| nextTask.getVehicle(nextTask.get(t)) != nextTask.getVehicle(t)) {
 				return false;
 			}	
-		}
-		
-		for(Vehicle v: vehicles) {
-			if(nextTask.getTime(nextTask.get(v)) == 1
-				|| getVehicle(nextTask.get(v)) != v) {
-				return false;
-			}
 		}
 		
 		if(nextTask.size() != availableTasks.size() + vehicles.size()) {
@@ -36,7 +29,8 @@ public class LocalSearch {
 		}
 		
 		for(Vehicle v: vehicles) {
-			if(v.getCurrentTasks().weightSum() > v.capacity()) {
+			double weight_sum = nextTask.getCurrentTasks(v).stream().collect(Collectors.summingInt(i -> i.weight));
+			if(weight_sum > v.capacity()) {
 				return false;
 			}
 		}
@@ -51,38 +45,38 @@ public class LocalSearch {
 		return null;
 	}
 	
+	public NextTasks local_choice() {
+		List<NextTasks> res_list = new ArrayList<NextTasks>(choose_neighbours());
+		return res_list.stream().collect(Collectors.minBy(Comparator.comparing(i->cost(i)))).get();
+	}
+	
 	public List<NextTasks> choose_neighbours() {
-		//petites mod pour créer slo nbh
-		ArrayList<NextTasks> res_list = new ArrayList<NextTasks>();
-		int i=0;
-		//mettre condition d'arrèt, par ex quand le cost arrête de diminuer
-		while(i < 10000) {
-			++i;
-			NextTasks n = new NextTasks(current_plan);
-			solutionShuffle(n);
-			if(checkConstraints(n)) {
-				res_list.add(n);
+		List<NextTasks> res_list = new ArrayList<NextTasks>();
+		for(Vehicle v: vehicles) {
+			for(Task t: current_plan.getCurrentTasks(v)) {
+				NextTasks n = current_plan.swap_task_order(v, t);
+				if(checkConstraints(n)) res_list.add(n);
+				
+				for(Vehicle v2: vehicles) {
+					NextTasks n2 = current_plan.swap_task_vehicle(t, v, v2);
+					if(checkConstraints(n2)) res_list.add(n2);
+				}
 			}
 		}
 		return res_list;
 	}
+
 	
-	public void solutionShuffle(NextTasks n) {
-		for(Task t: availableTasks) {
-			Task temp = n.get(t);
-			n.put()
-		}
-		n
-	}
-	
-	public double cost(TaskSet tasks) {
+	public double cost(NextTasks n) {
 		Double total_cost = 0.0;
-		for(Task t: tasks) {
-			total_cost += (t.deliveryCity.distanceTo(current_plan.get(t).pickupCity) + current_plan.get(t).pathLength()) * getVehicle(t).costPerKm();
+		for(Task t: availableTasks) {
+			total_cost += (t.deliveryCity.distanceTo(n.get(t).pickupCity) + n.get(t).pathLength()) 
+					* getVehicle(t).costPerKm();
 		}	
 		
 		for(Vehicle v: vehicles) {
-			total_cost += (v.getCurrentCity().distanceTo(current_plan.get(v).pickupCity) + current_plan.get(v).pathLength()) * v.costPerKm();
+			total_cost += (v.getCurrentCity().distanceTo(n.getFirstTask(v).pickupCity)
+					+ n.getFirstTask(v).pathLength()) * v.costPerKm();
 		}
 		return total_cost;
 	}
