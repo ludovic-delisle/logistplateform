@@ -45,10 +45,6 @@ public class NextTasks {
 			}
 		}
 		this.nextTask.put(v, new LinkedList<Task>(ll_t));
-		System.out.println("NewTask created:     " );
-		for(Vehicle v22: nextTask.keySet()) {
-			System.out.println("task size:  " + nextTask.get(v22).size() + "weight:   " + nextTask.get(v22).stream().collect(Collectors.summingInt(i -> i.weight)));
-		}
 		
 	}
 	
@@ -73,7 +69,9 @@ public class NextTasks {
 	}
 	
 	public Task getFirstTask(Vehicle v) {
-		return nextTask.get(v).get(0);
+		List<Task> l_t = nextTask.get(v);
+		if(l_t.size() <= 0) return null;
+		else return l_t.get(0);
 	}
 	
 	public Integer getTime(Task t) {
@@ -96,10 +94,8 @@ public class NextTasks {
 		int nb_tasks=0;
 		for(Vehicle v: nextTask.keySet()) {
 			nb_tasks += nextTask.get(v).size();
-			System.out.println("wwwwwww    " + nextTask.get(v).size() + "   " + nextTask.get(v).stream().collect(Collectors.summingInt(i -> i.weight)));
 
 		}
-		System.out.println("000000000000    " + nb_tasks + "   " + nextTask.size());
 		
 		return nextTask.size() + nb_tasks;
 	}
@@ -126,7 +122,6 @@ public class NextTasks {
 		NextTasks res = new NextTasks(this);
 		LinkedList<Task> ll_t = res.nextTask.get(v);
 		int idx = ll_t.indexOf(t);
-		System.out.println("swap task:   " + ll_t.size() + "   " + idx );
 
 		if(idx > -1 && idx < ll_t.size()-1) {
 			Collections.swap(ll_t, idx, idx+1);
