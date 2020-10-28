@@ -32,17 +32,24 @@ public class NextTasks {
 		LinkedList<Task> ll_t = new LinkedList<Task>();
 		Iterator<Vehicle> it = vehicles.iterator();
 		Vehicle v = it.next();
-
+		System.out.println("total task size:   " + tasks.size());
 		for(Task t: tasks) {
+			System.out.println("Adding:   " + ll_t.stream().collect(Collectors.summingInt(i -> i.weight)) + "   " +  t.weight + "   " +  v.capacity());
 			if(ll_t.stream().collect(Collectors.summingInt(i -> i.weight)) + t.weight <= v.capacity()) {
 				ll_t.add(t);
 			} else {
 				this.nextTask.put(v, new LinkedList<Task>(ll_t));
 				v = it.next();
 				ll_t.clear();
+				ll_t.add(t);
 			}
 		}
 		this.nextTask.put(v, new LinkedList<Task>(ll_t));
+		System.out.println("NewTask created:     " );
+		for(Vehicle v22: nextTask.keySet()) {
+			System.out.println("task size:  " + nextTask.get(v22).size() + "weight:   " + nextTask.get(v22).stream().collect(Collectors.summingInt(i -> i.weight)));
+		}
+		
 	}
 	
 	public Task get(Task t) {

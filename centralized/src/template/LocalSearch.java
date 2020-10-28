@@ -47,7 +47,6 @@ public class LocalSearch {
 				return false;
 			}	
 		}
-		System.out.println("rrrrrrrrrrrrrrrrrr    " + nextTask.size() + "  " +  availableTasks.size() + "   " + vehicles.size());
 		if(nextTask.size() != availableTasks.size() + vehicles.size()) {
 			System.out.println("faaaalse constraint");
 			return false;
@@ -72,11 +71,11 @@ public class LocalSearch {
 	}
 	
 	public NextTasks local_choice(List<NextTasks> task_list) {
-		System.out.println("cooost:  " + task_list.size());
+		System.out.println("coooiiiiiist:  " + task_list.size());
 		for(NextTasks n: task_list) {
-			System.out.println("cooost:  " + cost(n));
+			System.out.println("cooost:  ");
+			System.out.println("cooost: " + cost(n));
 		}
-		task_list.stream().collect(Collectors.minBy(Comparator.comparing(i->cost(i)))).get();
 		return task_list.stream().collect(Collectors.minBy(Comparator.comparing(i->cost(i)))).get();
 	}
 	
