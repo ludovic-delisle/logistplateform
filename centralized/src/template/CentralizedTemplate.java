@@ -24,6 +24,7 @@ import logist.topology.Topology.City;
  * A very simple auction agent that assigns all tasks to its first vehicle and
  * handles them sequentially.
  *
+ *
  */
 @SuppressWarnings("unused")
 public class CentralizedTemplate implements CentralizedBehavior {
@@ -37,7 +38,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
     @Override
     public void setup(Topology topology, TaskDistribution distribution,
             Agent agent) {
-        
+
         // this code is used to get the timeouts
         LogistSettings ls = null;
         try {
@@ -62,6 +63,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
         long time_start = System.currentTimeMillis();
         LocalSearch SLS = new LocalSearch(vehicles, tasks);
         NextTasks final_solution = SLS.SLSAlgo();
+
         List<Plan> plans = new ArrayList<Plan>();
         
         for(Vehicle v: vehicles) {

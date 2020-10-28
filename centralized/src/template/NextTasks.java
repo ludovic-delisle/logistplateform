@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import logist.simulation.Vehicle;
 import logist.task.Task;
@@ -22,27 +23,33 @@ public class NextTasks {
 	}
 	
 	public NextTasks(List<Vehicle> vehicles, TaskSet tasks) {
-		LinkedList<Task> ll_t = new LinkedList<Task>();
-		HashMap<Vehicle, LinkedList<Task>> hm = new HashMap<Vehicle,LinkedList<Task>>();
+		this.nextTask = new HashMap<Vehicle,LinkedList<Task>>();
 		
+		for(Vehicle v: vehicles) {
+			this.nextTask.put(v, new LinkedList<Task>());
+		}
+		
+		LinkedList<Task> ll_t = new LinkedList<Task>();
 		Iterator<Vehicle> it = vehicles.iterator();
 		Vehicle v = it.next();
+
 		for(Task t: tasks) {
-			if(v.getCurrentTasks().weightSum() + t.weight > v.capacity()) ll_t.add(t);
-			else {
-				hm.put(v, new LinkedList<Task>(ll_t));
+			if(ll_t.stream().collect(Collectors.summingInt(i -> i.weight)) + t.weight <= v.capacity()) {
+				ll_t.add(t);
+			} else {
+				this.nextTask.put(v, new LinkedList<Task>(ll_t));
 				v = it.next();
 				ll_t.clear();
 			}
 		}
-		this.nextTask = hm;
+		this.nextTask.put(v, new LinkedList<Task>(ll_t));
 	}
 	
 	public Task get(Task t) {
 		for(Vehicle v: nextTask.keySet()) {
 			LinkedList<Task> ll_t = nextTask.get(v);
 			int idx = ll_t.indexOf(t);
-			if(idx > -1) return ll_t.get(idx + 1);
+			if(idx > -1 && idx < ll_t.size() - 1) return ll_t.get(idx + 1);
 		}
 		return null; 
 	}
@@ -50,8 +57,8 @@ public class NextTasks {
 	public Task get(Vehicle v, Task t) {
 		LinkedList<Task> ll_t = nextTask.get(v);
 		int idx = ll_t.indexOf(t);
-		if(idx > -1) return ll_t.get(idx + 1);
-		else throw new ArrayIndexOutOfBoundsException();
+		if(idx > -1 && idx < ll_t.size() - 1) return ll_t.get(idx + 1);
+		else return null;
 	}
 	
 	public List<Task> getCurrentTasks(Vehicle v) {
@@ -82,7 +89,11 @@ public class NextTasks {
 		int nb_tasks=0;
 		for(Vehicle v: nextTask.keySet()) {
 			nb_tasks += nextTask.get(v).size();
+			System.out.println("wwwwwww    " + nextTask.get(v).size() + "   " + nextTask.get(v).stream().collect(Collectors.summingInt(i -> i.weight)));
+
 		}
+		System.out.println("000000000000    " + nb_tasks + "   " + nextTask.size());
+		
 		return nextTask.size() + nb_tasks;
 	}
 	
@@ -104,21 +115,13 @@ public class NextTasks {
 		}
 	}
 	
-	public void swap_task_order(Task t) {
-		for(Vehicle v: nextTask.keySet()) {
-			LinkedList<Task> ll_t = nextTask.get(v);
-			int idx = ll_t.indexOf(t);
-			if(idx > -1) {
-				Collections.swap(ll_t, idx, idx+1);
-			}
-		}
-	}
-	
 	public NextTasks swap_task_order(Vehicle v, Task t) {
 		NextTasks res = new NextTasks(this);
 		LinkedList<Task> ll_t = res.nextTask.get(v);
 		int idx = ll_t.indexOf(t);
-		if(idx > -1) {
+		System.out.println("swap task:   " + ll_t.size() + "   " + idx );
+
+		if(idx > -1 && idx < ll_t.size()-1) {
 			Collections.swap(ll_t, idx, idx+1);
 		}
 		return res;
