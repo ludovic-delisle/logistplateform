@@ -1,5 +1,6 @@
 package template;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -46,6 +47,10 @@ public class NextTasks {
 		}
 		this.nextTask.put(v, new LinkedList<Task>(ll_t));
 		
+	}
+	
+	public int get_all_task_weight(List<Task> ll_t) {
+		return ll_t.stream().collect(Collectors.summingInt(i -> i.weight));
 	}
 	
 	public Task get(Task t) {
@@ -138,10 +143,20 @@ public class NextTasks {
 		return null; 
 	}
 	
-	public NextTasks swap_task_vehicle(Task t, Vehicle v1, Vehicle v2) {
-		NextTasks res = new NextTasks(this);
-		if(res.getCurrentTasks(v1).remove(t)) res.getCurrentTasks(v2).add(0, t);
-		return res;
+	public List<NextTasks> swap_task_vehicle(Vehicle v1, final List<Vehicle> vv2) {
+		//a faire de manière plus efficace
+		List<NextTasks> res_list = new LinkedList<NextTasks>();
+		List<Task> l_t = new ArrayList<Task>(this.getCurrentTasks(v1));
+		for(Task t1: l_t) {
+			for(Vehicle v2: vv2) {
+				NextTasks res = new NextTasks(this);
+				 if(get_all_task_weight(res.getCurrentTasks(v2)) + t1.weight <= v2.capacity())
+					res.getCurrentTasks(v2).add(0, t1);
+				 	res.getCurrentTasks(v1).remove(t1);
+				 	res_list.add(res);
+			}
+		}
+		return res_list;
 	}
 	
 }
