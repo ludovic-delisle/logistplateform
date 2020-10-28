@@ -68,7 +68,11 @@ public class LocalSearch {
 	}
 	
 	public void solutionShuffle(NextTasks n) {
-		
+		for(Task t: availableTasks) {
+			Task temp = n.get(t);
+			n.put()
+		}
+		n
 	}
 	
 	public double cost(TaskSet tasks) {
