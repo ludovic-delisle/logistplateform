@@ -22,25 +22,43 @@ public class LocalSearch {
 	
 	public NextTasks SLSAlgo() {
 
-		NextTasks solution = new NextTasks(vehicles, availableTasks);
-		
-
+		NextTasks solution = new NextTasks(vehicles, availableTasks, 8);
+		NextTasks best_solution = new NextTasks(solution);
+		int n_step=0;
+		int n_step_threshold=1;
 		final long startTime = System.currentTimeMillis();
-		while(System.currentTimeMillis() - startTime < 50000) {
+		while(System.currentTimeMillis() - startTime < 20000) {
 			NextTasks candidate_solution = new NextTasks(solution);
 			//System.out.println(candidate_solution.getSize());
 			Set<NextTasks> A = choose_neighbours(candidate_solution);
+			
+			for(int i =0; i<n_step; i++) {
+				A=choose_neighbours_n_steps(A);
+			}
 			
 			candidate_solution = local_choice(A);
 			
 			
 			if(cost(candidate_solution) < cost(solution)) {
+				n_step=0;
 				
 				solution = candidate_solution;
+				if(cost(candidate_solution) < cost(best_solution)) {
+					System.out.println("best global "+ cost(candidate_solution));
+					best_solution=candidate_solution;
+				}
 			}
-			System.out.println(candidate_solution.getSize());
+			else if(n_step>=n_step_threshold) {
+				solution=new NextTasks(vehicles, availableTasks, 9);
+				n_step=0;
+			}
+			else {
+				n_step+=1;
+			}
+			
 		}
-		return solution;
+		System.out.println(cost(best_solution));
+		return best_solution;
 	}
 	
 	public boolean checkConstraints(NextTasks nextTask) {
@@ -102,6 +120,23 @@ public class LocalSearch {
 
 		return next_tasks_set;
 	}
+	public Set<NextTasks> choose_neighbours_n_steps(Set<NextTasks> one_step_Sol) {
+		Set<NextTasks> next_tasks_set = new HashSet<NextTasks>();
+		for(NextTasks initialSol:one_step_Sol) {
+			for(Vehicle v: vehicles) {
+				final List<Task> l_t = new LinkedList<Task>(initialSol.getCurrentTasks(v));
+				for(Task t: l_t) {
+					NextTasks n = new NextTasks(initialSol.swap_task_order(v, t));
+					if(checkConstraints(n)) next_tasks_set.add(n);	
+				}
+				List<NextTasks> swaped_vehicles_tasks = new LinkedList<NextTasks>(initialSol.swap_task_vehicle(v, vehicles));
+				swaped_vehicles_tasks.stream().filter(i -> checkConstraints(i));
+				next_tasks_set.addAll(swaped_vehicles_tasks);
+			}
+		}
+		return next_tasks_set;
+	}
+
 
 	
 	public double cost(NextTasks n) {

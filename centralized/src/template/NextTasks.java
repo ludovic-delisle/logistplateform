@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import logist.simulation.Vehicle;
@@ -38,9 +39,7 @@ public class NextTasks {
 		LinkedList<Task> ll_t = new LinkedList<Task>();
 		Iterator<Vehicle> it = vehicles.iterator();
 		Vehicle v = it.next();
-		System.out.println("total task size:   " + tasks.size());
 		for(Task t: tasks) {
-			System.out.println("Adding:   " + ll_t.stream().collect(Collectors.summingInt(i -> i.weight)) + "   " +  t.weight + "   " +  v.capacity());
 			if(ll_t.stream().collect(Collectors.summingInt(i -> i.weight)) + t.weight <= v.capacity()) {
 				ll_t.add(t);
 			} else {
@@ -53,6 +52,27 @@ public class NextTasks {
 		this.nextTask.put(v, new LinkedList<Task>(ll_t));
 		
 	}
+	
+	public NextTasks(List<Vehicle> vehicles, TaskSet tasks, int a) {
+		this.nextTask = new HashMap<Vehicle,LinkedList<Task>>();
+		for(Vehicle v: vehicles) {
+			this.nextTask.put(v, new LinkedList<Task>());
+		}
+		LinkedList<Task> task_list = new LinkedList<Task>();
+		Iterator<Vehicle> it = vehicles.iterator();
+		Vehicle v = it.next();
+		Random rand = new Random();
+		for(Task t: tasks) {
+			Vehicle random_vehicle;
+			do {
+		    random_vehicle = vehicles.get(rand.nextInt(vehicles.size()));
+			}while(random_vehicle.capacity() <= (nextTask.get(random_vehicle).size()+1)*t.weight);
+			this.add(random_vehicle, t);
+			
+		}
+		
+	}
+	
 	
 	public int get_all_task_weight(List<Task> ll_t) {
 		return ll_t.stream().collect(Collectors.summingInt(i -> i.weight));
