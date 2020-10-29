@@ -23,20 +23,22 @@ public class LocalSearch {
 	public NextTasks SLSAlgo() {
 
 		NextTasks solution = new NextTasks(vehicles, availableTasks);
-		System.out.println("initial cost: " + cost(solution));
+		
 
 		final long startTime = System.currentTimeMillis();
-		while(System.currentTimeMillis() - startTime < 5000) {
+		while(System.currentTimeMillis() - startTime < 50000) {
 			NextTasks candidate_solution = new NextTasks(solution);
+			//System.out.println(candidate_solution.getSize());
 			Set<NextTasks> A = choose_neighbours(candidate_solution);
-			System.out.println("Neighbours size:  " + A.size());
+			
 			candidate_solution = local_choice(A);
 			
-			System.out.println("candidate cost: " + cost(candidate_solution) + "  " + cost(solution));
+			
 			if(cost(candidate_solution) < cost(solution)) {
-				System.out.println("found candidate w/ less cost: " + cost(candidate_solution) + "  " + cost(solution));
+				
 				solution = candidate_solution;
 			}
+			System.out.println(candidate_solution.getSize());
 		}
 		return solution;
 	}
@@ -44,25 +46,25 @@ public class LocalSearch {
 	public boolean checkConstraints(NextTasks nextTask) {
 		if(nextTask.getSize() != availableTasks.size() + vehicles.size()) {
 			
-			System.out.println("faaaalse size  " + nextTask.getSize() + "  " + availableTasks.size() + "  " + vehicles.size());
+			
 			return false;
 		}
 		
 		for(Vehicle v: vehicles) {
 			for(Task t: nextTask.getCurrentTasks(v)) {
 				if((nextTask.get(v, t) != null && t != null) && (nextTask.get(v, t) == t)) {
-					System.out.println("faaaalse tasks  " + nextTask.get(v, t) + "   " +  t);
+					
 					return false;
 				}	
 			}
 		
 			double weight_sum = nextTask.getCurrentTasks(v).stream().collect(Collectors.summingInt(i -> i.weight));
 			if(weight_sum > v.capacity()) {
-				System.out.println("faaaalse capacity");
+				
 				return false;
 			}
 		}
-		//System.out.println("constraints true");
+		
 		return true;
 	}
 	
@@ -87,15 +89,15 @@ public class LocalSearch {
 				NextTasks n = new NextTasks(initialSol.swap_task_order(v, t));
 				NextTasks n2 = new NextTasks(initialSol.swap_task_order_2(v, t));
 				NextTasks n3 = new NextTasks(initialSol.swap_task_order_3(v));
-				System.out.println("check consta:  " + checkConstraints(n) + "cost: " + cost(n));
+				
 				if(checkConstraints(n)) next_tasks_set.add(n);
 				if(checkConstraints(n2)) next_tasks_set.add(n2);
 				if(checkConstraints(n2)) next_tasks_set.add(n3);
 			}
 			
-			//List<NextTasks> small_list = new LinkedList<NextTasks>(initialSol.swap_task_vehicle(v, vehicles));
-			//small_list.stream().filter(i -> checkConstraints(i));
-			//res_list.addAll(small_list);
+			List<NextTasks> swaped_vehicles_tasks = new LinkedList<NextTasks>(initialSol.swap_task_vehicle(v, vehicles));
+			swaped_vehicles_tasks.stream().filter(i -> checkConstraints(i));
+			next_tasks_set.addAll(swaped_vehicles_tasks);
 		}
 
 		return next_tasks_set;

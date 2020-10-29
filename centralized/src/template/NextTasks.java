@@ -104,7 +104,7 @@ public class NextTasks {
 		int nb_tasks=0;
 		for(Vehicle v: nextTask.keySet()) {
 			nb_tasks += nextTask.get(v).size() + 1;
-			//System.out.println("nooooo  " + nb_tasks);
+			
 		}
 		
 		return nb_tasks;
@@ -168,19 +168,31 @@ public class NextTasks {
 	}
 	
 	public List<NextTasks> swap_task_vehicle(Vehicle v1, final List<Vehicle> vv2) {
-		//a faire de manière plus efficace
 		List<NextTasks> res_list = new LinkedList<NextTasks>();
 		List<Task> l_t = new ArrayList<Task>(this.getCurrentTasks(v1));
 		for(Task t1: l_t) {
 			for(Vehicle v2: vv2) {
 				NextTasks res = new NextTasks(this);
-				 if(get_all_task_weight(res.getCurrentTasks(v2)) + t1.weight <= v2.capacity())
-					res.getCurrentTasks(v2).add(0, t1);
-				 	res.getCurrentTasks(v1).remove(t1);
+				 if(get_all_task_weight(res.getCurrentTasks(v2)) + t1.weight <= v2.capacity() && !v1.equals(v2))
+				 	res.remove(v1, t1);
+				 	res.add(v2, t1);
 				 	res_list.add(res);
 			}
 		}
 		return res_list;
+	}
+	
+	
+	public void add(Vehicle v, Task t) {
+		LinkedList<Task> new_task_list = nextTask.get(v);
+		new_task_list.add(t);
+		nextTask.put(v, new_task_list);
+	}
+	
+	public void remove(Vehicle v, Task t) {
+		LinkedList<Task> new_task_list = nextTask.get(v);
+		new_task_list.remove(t);
+		nextTask.put(v, new_task_list);
 	}
 	
 }
