@@ -1,9 +1,10 @@
 package template;
 
-import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import logist.simulation.Vehicle;
@@ -22,17 +23,18 @@ public class LocalSearch {
 	public NextTasks SLSAlgo() {
 
 		NextTasks solution = new NextTasks(vehicles, availableTasks);
+		System.out.println("initial cost: " + cost(solution));
 
 		final long startTime = System.currentTimeMillis();
-		while(System.currentTimeMillis() - startTime < 50000) {
+		while(System.currentTimeMillis() - startTime < 5000) {
 			NextTasks candidate_solution = new NextTasks(solution);
-
-			List<NextTasks> A = new ArrayList<NextTasks>(choose_neighbours(candidate_solution));
-			System.out.println("chooseneghdgoood" + A.size());
+			Set<NextTasks> A = choose_neighbours(candidate_solution);
+			System.out.println("Neighbours size:  " + A.size());
 			candidate_solution = local_choice(A);
-			System.out.println("localchoiceverygoood");
-
+			
+			System.out.println("candidate cost: " + cost(candidate_solution) + "  " + cost(solution));
 			if(cost(candidate_solution) < cost(solution)) {
+				System.out.println("found candidate w/ less cost: " + cost(candidate_solution) + "  " + cost(solution));
 				solution = candidate_solution;
 			}
 		}
@@ -40,26 +42,27 @@ public class LocalSearch {
 	}
 	
 	public boolean checkConstraints(NextTasks nextTask) {
-		for(Task t: availableTasks) {
-			if(nextTask.get(t) != null 
-			&& (nextTask.get(t) == t
-			|| nextTask.getTime(t) + 1 != nextTask.getTime(nextTask.get(t)) 
-			|| nextTask.getVehicle(nextTask.get(t)) != nextTask.getVehicle(t))) {
-				return false;
-			}	
-		}
-		if(nextTask.size() != availableTasks.size() + vehicles.size()) {
-			System.out.println("faaaalse constraint");
+		if(nextTask.getSize() != availableTasks.size() + vehicles.size()) {
+			
+			System.out.println("faaaalse size  " + nextTask.getSize() + "  " + availableTasks.size() + "  " + vehicles.size());
 			return false;
 		}
-
+		
 		for(Vehicle v: vehicles) {
+			for(Task t: nextTask.getCurrentTasks(v)) {
+				if((nextTask.get(v, t) != null && t != null) && (nextTask.get(v, t) == t)) {
+					System.out.println("faaaalse tasks  " + nextTask.get(v, t) + "   " +  t);
+					return false;
+				}	
+			}
+		
 			double weight_sum = nextTask.getCurrentTasks(v).stream().collect(Collectors.summingInt(i -> i.weight));
 			if(weight_sum > v.capacity()) {
+				System.out.println("faaaalse capacity");
 				return false;
 			}
 		}
-		System.out.println("constraints true");
+		//System.out.println("constraints true");
 		return true;
 	}
 	
@@ -71,31 +74,31 @@ public class LocalSearch {
 		return null;
 	}
 	
-	public NextTasks local_choice(List<NextTasks> task_list) {
-		for(NextTasks n: task_list) {
-			System.out.println("cooost: " + cost(n));
-		}
+	public NextTasks local_choice(Set<NextTasks> task_list) {
 		return task_list.stream().collect(Collectors.minBy(Comparator.comparing(i->cost(i)))).get();
 	}
 	
-	public List<NextTasks> choose_neighbours(NextTasks initialSol) {
-		List<NextTasks> res_list = new ArrayList<NextTasks>();
+	public Set<NextTasks> choose_neighbours(NextTasks initialSol) {
+		Set<NextTasks> next_tasks_set = new HashSet<NextTasks>();
 		for(Vehicle v: vehicles) {
 			
 			final List<Task> l_t = new LinkedList<Task>(initialSol.getCurrentTasks(v));
 			for(Task t: l_t) {
-				NextTasks n = initialSol.swap_task_order(v, t);
-				System.out.println("check consta:  " + checkConstraints(n));
-				if(checkConstraints(n)) res_list.add(n);
-				
+				NextTasks n = new NextTasks(initialSol.swap_task_order(v, t));
+				NextTasks n2 = new NextTasks(initialSol.swap_task_order_2(v, t));
+				NextTasks n3 = new NextTasks(initialSol.swap_task_order_3(v));
+				System.out.println("check consta:  " + checkConstraints(n) + "cost: " + cost(n));
+				if(checkConstraints(n)) next_tasks_set.add(n);
+				if(checkConstraints(n2)) next_tasks_set.add(n2);
+				if(checkConstraints(n2)) next_tasks_set.add(n3);
 			}
 			
-			List<NextTasks> small_list = new LinkedList<NextTasks>(initialSol.swap_task_vehicle(v, vehicles));
-			small_list.stream().filter(i -> checkConstraints(i));
-			res_list.addAll(small_list);
+			//List<NextTasks> small_list = new LinkedList<NextTasks>(initialSol.swap_task_vehicle(v, vehicles));
+			//small_list.stream().filter(i -> checkConstraints(i));
+			//res_list.addAll(small_list);
 		}
 
-		return res_list;
+		return next_tasks_set;
 	}
 
 	
@@ -117,7 +120,6 @@ public class LocalSearch {
 			if(ll_t.size() > 0) total_cost += ll_t.get(ll_t.size()-1).pathLength() * v.costPerKm();
 			
 		}
-		System.out.println("todod beem");
 		return total_cost;
 	}
 }

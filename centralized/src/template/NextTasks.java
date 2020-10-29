@@ -20,7 +20,12 @@ public class NextTasks {
 	}
 	
 	public NextTasks(NextTasks n) {
-		this.nextTask = new HashMap<Vehicle,LinkedList<Task>>(n.nextTask);
+		HashMap<Vehicle, LinkedList<Task>> n2 = new HashMap<Vehicle,LinkedList<Task>>();
+		
+		for(Vehicle v: n.nextTask.keySet()) {
+			n2.put(v, new LinkedList<Task>(n.getCurrentTasks(v)));
+		}
+		this.nextTask = n2;
 	}
 	
 	public NextTasks(List<Vehicle> vehicles, TaskSet tasks) {
@@ -95,14 +100,14 @@ public class NextTasks {
 		else return 0;
 	}
 	
-	public Integer size() {
+	public Integer getSize() {
 		int nb_tasks=0;
 		for(Vehicle v: nextTask.keySet()) {
-			nb_tasks += nextTask.get(v).size();
-
+			nb_tasks += nextTask.get(v).size() + 1;
+			//System.out.println("nooooo  " + nb_tasks);
 		}
 		
-		return nextTask.size() + nb_tasks;
+		return nb_tasks;
 	}
 	
 	public void put(Task t1, Task t2) {
@@ -131,6 +136,25 @@ public class NextTasks {
 		if(idx > -1 && idx < ll_t.size()-1) {
 			Collections.swap(ll_t, idx, idx+1);
 		}
+		return res;
+	}
+	
+	public NextTasks swap_task_order_2(Vehicle v, Task t) {
+		NextTasks res = new NextTasks(this);
+		LinkedList<Task> ll_t = res.nextTask.get(v);
+		int idx = ll_t.indexOf(t);
+
+		if(idx > -1 && idx < ll_t.size()-3) {
+			Collections.swap(ll_t, idx, idx+3);
+		}
+		return res;
+	}
+	
+	public NextTasks swap_task_order_3(Vehicle v) {
+		NextTasks res = new NextTasks(this);
+		LinkedList<Task> ll_t = res.nextTask.get(v);
+		Collections.swap(ll_t, 0, ll_t.size()-1);
+		
 		return res;
 	}
 	
