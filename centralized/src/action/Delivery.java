@@ -38,9 +38,7 @@ public class Delivery implements Action {
 			if(a.isDelivery() || isPickup()){
 				return true;
 			}
-			return false;
 		}
-		System.out.println("not olol");
 		return true;
 	}
 	@Override

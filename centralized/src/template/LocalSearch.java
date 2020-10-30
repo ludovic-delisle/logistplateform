@@ -33,14 +33,14 @@ public class LocalSearch {
 		int n_step=0;
 		int n_step_threshold=1;
 		final long startTime = System.currentTimeMillis();
-		while(System.currentTimeMillis() - startTime < 2000000) {
+		while(System.currentTimeMillis() - startTime < 60000) {
 			NextTasks candidate_solution = new NextTasks(solution);
 			//System.out.println(candidate_solution.getSize());
 			Set<NextTasks> A = choose_neighbour_actions(candidate_solution);
 			
-			for(int i =0; i<n_step; i++) {
+			/*for(int i =0; i<n_step; i++) {
 				A=choose_neighbours_n_steps_action(A);
-			}
+			}*/
 			
 			candidate_solution = local_choice_actions(A);
 			
@@ -236,7 +236,8 @@ public class LocalSearch {
 		for(Vehicle v: vehicles) {
 			//check for capacity
 			int w=0;
-			for(Action a: nextTask.getCurrentActions(v)) {
+			for(int i = 0; i < nextTask.getCurrentActions(v).size()-1; i++) {
+				Action a = nextTask.getCurrentActions(v).get(i);
 				if(a.isDelivery()) {
 					w-=a.task().weight;
 				}
@@ -248,10 +249,8 @@ public class LocalSearch {
 				}
 				
 				//check for right order
-				int s = nextTask.getCurrentActions(v).indexOf(a);
-				int e = nextTask.getCurrentActions(v).size()-1;
-				List<Action> sub_action = nextTask.getCurrentActions(v).subList(s, e);
-				for(Action ac : sub_action) {
+				for(int j = i+1; j < nextTask.getCurrentActions(v).size(); j++) {
+					Action ac = nextTask.getCurrentActions(v).get(j);
 					if(!a.right_order(ac)) {
 						return false;
 					}
