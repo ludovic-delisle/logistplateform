@@ -64,9 +64,9 @@ public class CentralizedTemplate implements CentralizedBehavior {
         LocalSearch SLS = new LocalSearch(vehicles, tasks);
         NextTasks final_solution = SLS.SLSAlgo();
 
-        List<Plan> plans = new ArrayList<Plan>();
+        List<Plan> plans = SLS.create_plan(final_solution);
         
-        for(Vehicle v: vehicles) {
+        /*for(Vehicle v: vehicles) {
 //			System.out.println("Agent " + agent.id() + " has tasks " + tasks);
         	Plan planVehicle = naivePlan(v, final_solution.getCurrentTasks(v));
         	plans.add(planVehicle);
@@ -75,7 +75,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
         long time_end = System.currentTimeMillis();
         long duration = time_end - time_start;
         System.out.println("The plan was generated in " + duration + " milliseconds.");
-        
+        */
         return plans;
     }
 
