@@ -31,17 +31,22 @@ public class LocalSearch {
 		
 		NextTasks best_solution = new NextTasks(solution);
 		
+		NextTasks in_solution_1=new NextTasks(solution);
+		NextTasks in_solution_2=new NextTasks(solution);
+		
+		
 		int n_step=0;
 		int n_step_threshold=1;
 		final long startTime = System.currentTimeMillis();
+		
+		
 		while(System.currentTimeMillis() - startTime < 60000) {
 			NextTasks candidate_solution = new NextTasks(solution);
-			//System.out.println(candidate_solution.getSize());
 			Set<NextTasks> A = choose_neighbour_actions(candidate_solution);
 			
-			/*for(int i =0; i<n_step; i++) {
+			for(int i =0; i<n_step; i++) {
 				A=choose_neighbours_n_steps_action(A);
-			}*/
+			}
 			
 			candidate_solution = local_choice_actions(A);
 			
@@ -53,10 +58,12 @@ public class LocalSearch {
 				if(cost_action(candidate_solution) < cost_action(best_solution)) {
 					System.out.println("best global "+ cost_action(candidate_solution));
 					best_solution=candidate_solution;
+					in_solution_2=new NextTasks(in_solution_1);
 				}
 			}
 			else if(n_step>=n_step_threshold) {
-				solution=new NextTasks(vehicles, availableTasks, rand);
+				//solution=new NextTasks(vehicles, availableTasks, rand);
+				in_solution_1=new NextTasks(solution);
 				n_step=0;
 			}
 			else {
@@ -64,7 +71,8 @@ public class LocalSearch {
 			}
 			
 		}
-		System.out.println("fini! " +cost_action(best_solution));
+		
+		
 		return best_solution;
 	}
 	
@@ -195,21 +203,15 @@ public class LocalSearch {
 	public Set<NextTasks> choose_neighbour_actions(NextTasks initialSol) {
 		Set<NextTasks> next_tasks_set = new HashSet<NextTasks>();
 		for(Vehicle v: vehicles) {
-			
 			final List<Action> l_t = new LinkedList<Action>(initialSol.getCurrentActions(v));
 			for(Action a: l_t) {
 				NextTasks n = new NextTasks(initialSol.swap_action_order(v, a));
-				
-				
 				if(checkConstraints_actions(n)) next_tasks_set.add(n);
-				
 			}
-			
 			List<NextTasks> swaped_vehicles_tasks = new LinkedList<NextTasks>(initialSol.swap_action_vehicle(v, vehicles));
 			swaped_vehicles_tasks.stream().filter(i -> checkConstraints_actions(i));
 			next_tasks_set.addAll(swaped_vehicles_tasks);
 		}
-
 		return next_tasks_set;
 	}
 	

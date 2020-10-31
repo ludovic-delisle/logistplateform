@@ -252,9 +252,10 @@ public class NextTasks {
 	public List<NextTasks> swap_action_vehicle(Vehicle v1, final List<Vehicle> vv2) {
 		List<NextTasks> res_list = new LinkedList<NextTasks>();
 		List<Task> l_t = new ArrayList<Task>(this.getCurrentTasks(v1));
+		NextTasks res;
 		for(Task t1: l_t) {
 			for(Vehicle v2: vv2) {
-				NextTasks res = new NextTasks(this);
+				res = new NextTasks(this);
 				res.remove(v1, t1);
 			 	res.add(v2, t1);
 				res.remove_actions(v1, t1);
@@ -277,8 +278,8 @@ public class NextTasks {
 		nextTask.put(v, new_task_list);
 	}
 	public void add_actions(Vehicle v, Task t) {
-		Action p = new Pickup(t);
-		Action d = new Delivery(t);
+		Action p = taskActionMap.get(t).getFirst();
+		Action d = taskActionMap.get(t).getLast();
 		
 		LinkedList<Action> new_action_list = nextAction.get(v);
 		new_action_list.add(p);
@@ -288,14 +289,14 @@ public class NextTasks {
 	}
 	
 	public void remove_actions(Vehicle v, Task t) {
-		Action p = new Pickup(t);
-		Action d = new Delivery(t);
+		Action p = taskActionMap.get(t).getFirst();
+		Action d = taskActionMap.get(t).getLast();
 		
 		LinkedList<Action> new_action_list = nextAction.get(v);
 		new_action_list.remove(p);
 		new_action_list.remove(d);
 		
-		nextAction.put(v, new_action_list);
+		this.nextAction.put(v, new_action_list);
 	}
 	
 }
