@@ -20,7 +20,6 @@ public class NextTasks {
 	private HashMap<Vehicle, LinkedList<Task>> nextTask;
 	private HashMap<Vehicle, LinkedList<Action>> nextAction;
 	private HashMap<Task, LinkedList<Action>> taskActionMap;
-	Random rand = new Random(42);
 	public NextTasks() {
 		this.nextTask = new HashMap<Vehicle,LinkedList<Task>>();
 	}
@@ -65,7 +64,7 @@ public class NextTasks {
 		
 	}
 	
-	public NextTasks(List<Vehicle> vehicles, TaskSet tasks, int a) {
+	public NextTasks(List<Vehicle> vehicles, TaskSet tasks, Random rand) {
 		this.nextTask = new HashMap<Vehicle,LinkedList<Task>>();
 		this.nextAction = new HashMap<Vehicle,LinkedList<Action>>();
 		this.taskActionMap= new HashMap<Task,LinkedList<Action>>();
@@ -76,7 +75,6 @@ public class NextTasks {
 		LinkedList<Task> task_list = new LinkedList<Task>();
 		Iterator<Vehicle> it = vehicles.iterator();
 		Vehicle v = it.next();
-		
 		for(Task t: tasks) {
 			
 			//Add pickup and delivery action to the map with their corresponding task

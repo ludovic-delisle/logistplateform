@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,7 +19,7 @@ import logist.task.Task;
 public class LocalSearch {
 	private List<Vehicle> vehicles;
 	private TaskSet availableTasks;
-	
+	Random rand = new Random(42);
 	LocalSearch(List<Vehicle> vehicles1, TaskSet availableTasks1){
 		this.vehicles = vehicles1;
 		this.availableTasks = availableTasks1;
@@ -26,7 +27,7 @@ public class LocalSearch {
 	
 	public NextTasks SLSAlgo() {
 
-		NextTasks solution = new NextTasks(vehicles, availableTasks, 9);
+		NextTasks solution = new NextTasks(vehicles, availableTasks, rand);
 		
 		NextTasks best_solution = new NextTasks(solution);
 		
@@ -55,7 +56,7 @@ public class LocalSearch {
 				}
 			}
 			else if(n_step>=n_step_threshold) {
-				solution=new NextTasks(vehicles, availableTasks, 9);
+				solution=new NextTasks(vehicles, availableTasks, rand);
 				n_step=0;
 			}
 			else {
