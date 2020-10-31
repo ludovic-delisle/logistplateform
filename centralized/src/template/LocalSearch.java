@@ -31,8 +31,6 @@ public class LocalSearch {
 		
 		NextTasks best_solution = new NextTasks(solution);
 		
-		NextTasks in_solution_1=new NextTasks(solution);
-		NextTasks in_solution_2=new NextTasks(solution);
 		
 		
 		int n_step=0;
@@ -58,12 +56,11 @@ public class LocalSearch {
 				if(cost_action(candidate_solution) < cost_action(best_solution)) {
 					System.out.println("best global "+ cost_action(candidate_solution));
 					best_solution=candidate_solution;
-					in_solution_2=new NextTasks(in_solution_1);
+					
 				}
 			}
 			else if(n_step>=n_step_threshold) {
-				//solution=new NextTasks(vehicles, availableTasks, rand);
-				in_solution_1=new NextTasks(solution);
+				solution=new NextTasks(vehicles, availableTasks, rand);
 				n_step=0;
 			}
 			else {
