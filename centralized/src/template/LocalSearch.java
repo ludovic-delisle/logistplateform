@@ -34,8 +34,8 @@ public class LocalSearch {
 		NextTasks solution = new NextTasks(vehicles, availableTasks, rand);
 		NextTasks best_solution = new NextTasks(solution);
 		
-		int n_step=0;
-		int n_step_threshold=1;
+		int n_step=0; //current degree of neighbors of neighbors that we compute
+		int n_step_threshold=1; //threshold above which we stop increasing n_steps and do a random restart
 		final long startTime = System.currentTimeMillis();
 		
 		while(System.currentTimeMillis() - startTime < 60000) {
@@ -45,6 +45,7 @@ public class LocalSearch {
 			Set<NextTasks> A = choose_neighbour_actions(sol_set);
 			
 			for(int i =0; i<n_step; i++) {
+				//here we search for all the neighbors up to i transformations away from the initial solution
 				A=choose_neighbour_actions(A);
 			}
 			
