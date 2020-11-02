@@ -1,6 +1,5 @@
 package template;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -20,6 +19,7 @@ public class LocalSearch {
 	private List<Vehicle> vehicles;
 	private TaskSet availableTasks;
 	Random rand = new Random(42);
+	
 	LocalSearch(List<Vehicle> vehicles1, TaskSet availableTasks1){
 		this.vehicles = vehicles1;
 		this.availableTasks = availableTasks1;
@@ -28,15 +28,11 @@ public class LocalSearch {
 	public NextTasks SLSAlgo() {
 
 		NextTasks solution = new NextTasks(vehicles, availableTasks, rand);
-		
 		NextTasks best_solution = new NextTasks(solution);
-		
-		
 		
 		int n_step=0;
 		int n_step_threshold=1;
 		final long startTime = System.currentTimeMillis();
-		
 		
 		while(System.currentTimeMillis() - startTime < 60000) {
 			NextTasks candidate_solution = new NextTasks(solution);
@@ -48,7 +44,6 @@ public class LocalSearch {
 			
 			candidate_solution = local_choice_actions(A);
 			
-			
 			if(cost_action(candidate_solution) < cost_action(solution)) {
 				n_step=0;
 				
@@ -58,54 +53,37 @@ public class LocalSearch {
 					best_solution=candidate_solution;
 					
 				}
-			}
-			else if(n_step>=n_step_threshold) {
+			// if we exceeded a given amount of steps, we restart the search with another random initial guess (same seed)
+			}else if(n_step>=n_step_threshold) {
 				solution=new NextTasks(vehicles, availableTasks, rand);
 				n_step=0;
-			}
-			else {
+			// otherwise we just increase the steps counter
+			} else {
 				n_step+=1;
 			}
 			
 		}
 		
-		
 		return best_solution;
 	}
 	
 	public boolean checkConstraints(NextTasks nextTask) {
+		// Note: not all the given constraints are checked explicitly because some are assured by design
+		// check if the map doesn't have the correct size
 		if(nextTask.getSize() != availableTasks.size() + vehicles.size()) {
-			
-			
 			return false;
 		}
 		
+		// check if all the tasks assigned to a given vehicle are unique
 		for(Vehicle v: vehicles) {
-			for(Task t: nextTask.getCurrentTasks(v)) {
-				if((nextTask.get(v, t) != null && t != null) && (nextTask.get(v, t) == t)) {
-					
-					return false;
-				}	
-			}
-		
-			double weight_sum = nextTask.getCurrentTasks(v).stream().collect(Collectors.summingInt(i -> i.weight));
-			if(weight_sum > v.capacity()) {
-				
+			if(nextTask.getCurrentTasks(v).size() == (new HashSet<Task>(nextTask.getCurrentTasks(v)).size())) {
 				return false;
-			}
+			}	
 		}
-		
 		return true;
 	}
 	
-	public Vehicle getVehicle(Task t) {
-		for(Vehicle v: vehicles) {
-			if(v.getCurrentTasks().contains(t))
-				return v;
-		}
-		return null;
-	}
-	
+	// return the NextTasks object with the smallest cost
 	public NextTasks local_choice(Set<NextTasks> task_list) {
 		return task_list.stream().collect(Collectors.minBy(Comparator.comparing(i->cost(i)))).get();
 	}
