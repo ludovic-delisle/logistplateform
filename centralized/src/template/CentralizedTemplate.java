@@ -66,16 +66,6 @@ public class CentralizedTemplate implements CentralizedBehavior {
 
         List<Plan> plans = SLS.create_plan(final_solution);
         
-        /*for(Vehicle v: vehicles) {
-//			System.out.println("Agent " + agent.id() + " has tasks " + tasks);
-        	Plan planVehicle = naivePlan(v, final_solution.getCurrentTasks(v));
-        	plans.add(planVehicle);
-        }
-        
-        long time_end = System.currentTimeMillis();
-        long duration = time_end - time_start;
-        System.out.println("The plan was generated in " + duration + " milliseconds.");
-        */
         return plans;
     }
 

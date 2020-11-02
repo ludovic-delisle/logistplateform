@@ -16,9 +16,10 @@ import logist.task.TaskSet;
 import action.*;
 
 public class NextTasks {
-	private HashMap<Vehicle, LinkedList<Task>> nextTask;
-	private HashMap<Vehicle, LinkedList<Action>> nextAction;
-	private HashMap<Task, LinkedList<Action>> taskActionMap;
+
+	private HashMap<Vehicle, LinkedList<Task>> nextTask; // stores task assigned to each vehicle
+	private HashMap<Vehicle, LinkedList<Action>> nextAction; //stores the action to perform in order
+	private HashMap<Task, LinkedList<Action>> taskActionMap; //stores which actions (pickup and delivery) are associated which which task
 	
 	public NextTasks(NextTasks n) {
 		HashMap<Vehicle, LinkedList<Task>> n2 = new HashMap<Vehicle,LinkedList<Task>>();
@@ -48,9 +49,14 @@ public class NextTasks {
 		ll_t.addAll(tasks);
 		
 		this.nextTask.put(vehicles.get(0), new LinkedList<Task>(ll_t));
-		
 	}
 	
+	/**
+	 * Creates a new NextTasks object by assigning the tasks in a random order to randomly chosen vehicles
+	 * @param vehicles: 
+	 * @param tasks: set of available tasks in the environment 
+	 * @param rand: Random generator
+	 */
 	public NextTasks(List<Vehicle> vehicles, TaskSet tasks, Random rand) {
 		this.nextTask = new HashMap<Vehicle,LinkedList<Task>>();
 		this.nextAction = new HashMap<Vehicle,LinkedList<Action>>();
@@ -121,15 +127,6 @@ public class NextTasks {
 		else return l_t.get(0);
 	}
 	
-	public Integer getTime(Task t) {
-		for(Vehicle v: nextTask.keySet()) {
-			LinkedList<Task> ll_t = nextTask.get(v);
-			int idx = ll_t.indexOf(t);
-			if(idx > -1) return idx+1;
-		}
-		return 0;
-	}
-	
 	public Integer getTime(Vehicle v, Task t) {
 		LinkedList<Task> ll_t = nextTask.get(v);
 		int idx = ll_t.indexOf(t);
@@ -144,15 +141,8 @@ public class NextTasks {
 		}
 		return nb_tasks;
 	}
-		
-	public void put(Vehicle v, Task t1, Task t2) {
-		LinkedList<Task> ll_t = nextTask.get(v);
-		int idx = ll_t.indexOf(t1);
-		if(idx > -1) {
-			ll_t.add(idx, t2);
-		}
-	}
 	
+	// swaps the current task with the next one in the list of tasks
 	public NextTasks swap_task_order(Vehicle v, Task t) {
 		NextTasks res = new NextTasks(this);
 		LinkedList<Task> ll_t = res.nextTask.get(v);
@@ -164,6 +154,7 @@ public class NextTasks {
 		return res;
 	}
 	
+	// swaps the current action with the next one in the list of actions
 	public NextTasks swap_action_order(Vehicle v, Action a) {
 		NextTasks res = new NextTasks(this);
 		LinkedList<Action> ll_t = res.nextAction.get(v);
@@ -196,14 +187,14 @@ public class NextTasks {
 		return res;
 	}
 	
-	
+	// assigns a given task to another vehicle
 	public List<NextTasks> swap_task_vehicle(Vehicle v1, final List<Vehicle> vv2) {
 		List<NextTasks> res_list = new LinkedList<NextTasks>();
 		List<Task> l_t = new ArrayList<Task>(this.getCurrentTasks(v1));
 		for(Task t1: l_t) {
 			for(Vehicle v2: vv2) {
 				NextTasks res = new NextTasks(this);
-				 if(get_all_task_weight(res.getCurrentTasks(v2)) + t1.weight <= v2.capacity() && !v1.equals(v2))
+				 if(!v1.equals(v2))
 				 	res.remove(v1, t1);
 				 	res.add(v2, t1);
 				 	res_list.add(res);
@@ -212,6 +203,7 @@ public class NextTasks {
 		return res_list;
 	}
 	
+	// Same as above but for multiple tasks version
 	public List<NextTasks> swap_action_vehicle(Vehicle v1, final List<Vehicle> vv2) {
 		List<NextTasks> res_list = new LinkedList<NextTasks>();
 		List<Task> l_t = new ArrayList<Task>(this.getCurrentTasks(v1));
