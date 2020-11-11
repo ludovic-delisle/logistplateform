@@ -1,4 +1,5 @@
-package template;
+package centralizedAlgo;
+
 
 import java.util.Comparator;
 import java.util.HashSet;
@@ -20,7 +21,7 @@ public class LocalSearch {
 	private TaskSet availableTasks;
 	Random rand = new Random(42);
 	
-	LocalSearch(List<Vehicle> vehicles1, TaskSet availableTasks1){
+	public LocalSearch(List<Vehicle> vehicles1, TaskSet availableTasks1){
 		this.vehicles = vehicles1;
 		this.availableTasks = availableTasks1;
 	}
@@ -29,16 +30,22 @@ public class LocalSearch {
 	 * Executes the Stochastic Local Search Algorithm with greedy descent and random restart
 	 * @return The Set of tasks with the smallest cost (not optimal)
 	 */
-	public NextTasks SLSAlgo(long timeout) {
-
+	public NextTasks SLSAlgo() {
+		//System.out.println("Best ca foooort normal" + availableTasks.size());
 		NextTasks solution = new NextTasks(vehicles, availableTasks, rand);
+		//System.out.println("Best ca " + availableTasks.size());
+
 		NextTasks best_solution = new NextTasks(solution);
+		//System.out.println("Best ca foooort normal" + availableTasks.size());
+
 		
 		int n_step=0; //current degree of neighbors of neighbors that we compute
 		int n_step_threshold=1; //threshold above which we stop increasing n_steps and do a random restart
 		final long startTime = System.currentTimeMillis();
-		
-		while(System.currentTimeMillis() - startTime < timeout) {
+		//System.out.println("Best ca tournenee normal");
+		while(System.currentTimeMillis() - startTime < 60000) {
+			//System.out.println("Best ca foooort normal");
+
 			NextTasks candidate_solution = new NextTasks(solution);
 			HashSet<NextTasks> sol_set = new HashSet<NextTasks>();
 			sol_set.add(candidate_solution);

@@ -11,12 +11,11 @@ import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
-import model.State;
+import optimalAlgo.State;
 
 import java.util.Arrays;
 
-import algorithm.Astar;
-import algorithm.BFS;
+import optimalAlgo.Astar;
 
 /**
  * An optimal planner for one vehicle.

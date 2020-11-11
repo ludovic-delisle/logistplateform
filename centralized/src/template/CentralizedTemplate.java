@@ -62,7 +62,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
         long time_start = System.currentTimeMillis();
         LocalSearch SLS = new LocalSearch(vehicles, tasks);
-        NextTasks final_solution = SLS.SLSAlgo();
+        NextTasks final_solution = SLS.SLSAlgo(timeout_plan);
 
         List<Plan> plans = SLS.create_plan(final_solution);
         
@@ -93,6 +93,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
         }
         return plan;
     }
+    
 }
 
 
