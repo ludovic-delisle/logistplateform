@@ -38,7 +38,7 @@ public class LocalSearch {
 		int n_step_threshold=1; //threshold above which we stop increasing n_steps and do a random restart
 		final long startTime = System.currentTimeMillis();
 		
-		while(System.currentTimeMillis() - startTime < timeout) {
+		while(System.currentTimeMillis() - startTime < timeout - 1000) {
 			NextTasks candidate_solution = new NextTasks(solution);
 			HashSet<NextTasks> sol_set = new HashSet<NextTasks>();
 			sol_set.add(candidate_solution);
