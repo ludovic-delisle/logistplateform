@@ -23,6 +23,7 @@ import optimalAlgo.Astar;
 import optimalAlgo.Astar.Heuristic;
 import optimalAlgo.State;
 import centralizedAlgo.*;
+import prediction.Predictions;
 
 /**
  * A very simple auction agent that assigns all tasks to its first vehicle and
@@ -39,6 +40,12 @@ public class AuctionTemplate implements AuctionBehavior {
 	private Vehicle vehicle; // A remplacer par une Liste de véhicules 
 	private City currentCity;
 	private State state;
+	private List<Long> opponent_bids= new ArrayList<Long>();
+	private List<Long> our_bids= new ArrayList<Long>();
+	private List<Double> city_vals= new ArrayList<Double>();
+	private List<Double> task_dists= new ArrayList<Double>();
+	private Predictions pred = new Predictions();
+	private int id;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -54,17 +61,30 @@ public class AuctionTemplate implements AuctionBehavior {
 
 		this.state = State.MakeEmptyState(agent.vehicles().get(0), agent.getTasks());
 		//System.out.println("Ttttttttttt");
-
+		
+		this.id=agent.id();
+		
 		long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
 		this.random = new Random(seed);
 	}
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
+		if(agent.id()==0) {
+			opponent_bids.add(bids[1]);
+			our_bids.add(bids[0]);
+		}
+		else {
+			opponent_bids.add(bids[0]);
+			our_bids.add(bids[1]);
+		}
+		
 		if (winner == agent.id()) {
+			
 			vehicle.getCurrentTasks().add(previous);
 			currentCity = previous.deliveryCity;
-			System.out.println("Wiiiinnnneeer = " + winner);
+			//System.out.println("Wiiiinnnneeer = " + winner);
+			//System.out.println(our_bids);
 			//update biddingFactor depending on previous auctions results
 			double avg = Arrays.stream(bids).mapToInt(i -> (int) i.intValue()).sum();
 			
@@ -99,21 +119,26 @@ public class AuctionTemplate implements AuctionBehavior {
 	
 	@Override
 	public Long askPrice(Task task) {
-
-		// Is this the right way to enforce capacity ???¿¿¿
-		if (vehicle.capacity() < task.weight)
-			return null;
-		//System.out.println("Ttttttttttt1111111");
+		Double dest_city_value = agent.readProperty("city_value_factor",  Double.class, 0.0)*(1 - distribution.probability(task.deliveryCity, null));
+		this.city_vals.add(dest_city_value);
+		this.task_dists.add(task.pickupCity.distanceTo(task.deliveryCity));
+		if(opponent_bids.size()>5) {
+			double e_opponent_bid= pred.estimated_bid(opponent_bids, our_bids, task_dists, city_vals);
+			if(id==0) {
+				System.out.println("estimated bid: " + e_opponent_bid);
+			}
+		}
+		
 		State startState = new State(vehicle, agent.getTasks());
-		//System.out.println("TttttttttttMarginal");
-
 		double marginalCost = Astar.marginalCost(startState, task, Heuristic.DISTANCE);
-		//System.out.println("Ttttttttttt");
+		
 
 		double ratio = 1.0 + (random.nextDouble() * state.getBiddingFactor() * task.reward);
-		double bid = marginalCost + 
-		
-		//System.out.println("Task reward :" + task.reward + "  bidding price:  " + Math.round(bid) + "  marginalCost:  " + marginalCost);
+		double bid = marginalCost - dest_city_value;
+		if(id==1) {
+			bid= task.pickupCity.distanceTo(task.deliveryCity);
+			System.out.println("real bid: " + bid);
+		}
 		return (long) Math.round(bid);
 	}
 	
@@ -121,7 +146,7 @@ public class AuctionTemplate implements AuctionBehavior {
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 		
-		System.out.println("Agent " + agent.id() + " has tasks " + tasks);
+		System.out.println("Agent " + agent.name() + " has "+ + tasks.size() +" tasks ");
 		
 		
 		LocalSearch SLS = new LocalSearch(vehicles, tasks);
