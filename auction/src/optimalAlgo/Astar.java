@@ -80,8 +80,8 @@ public class Astar {
             throw new IllegalStateException("Error: No final state found");
         }
 		
-		System.out.println("Plan found after steps: " + nSteps );
-		System.out.println("The plan is: " + state.toPlan(startCity).toString());
+		//System.out.println("Plan found after steps: " + nSteps );
+		//System.out.println("The plan is: " + state.toPlan(startCity).toString());
 		return state.toPlan(startCity);
 	}
 	
@@ -93,8 +93,8 @@ public class Astar {
 		} else {
 			Plan originalPlan = run(startState, h);
 			Plan updatedPlan = run(newStartState, h);
-			System.out.println("nb av tasks: " + startState.getTasks() + "   apr:  " + newStartState.getTasks());
-			System.out.println("dist1 :  " + originalPlan.totalDistance() + "   dist2:    " +  updatedPlan.totalDistance());
+			//System.out.println("nb av tasks: " + startState.getTasks() + "   apr:  " + newStartState.getTasks());
+			//System.out.println("dist1 :  " + originalPlan.totalDistance() + "   dist2:    " +  updatedPlan.totalDistance());
 			return (updatedPlan.totalDistance() - originalPlan.totalDistance()) * startState.getCostKm();
 		}
 		

@@ -83,8 +83,9 @@ public class AuctionTemplate implements AuctionBehavior {
 			
 			vehicle.getCurrentTasks().add(previous);
 			currentCity = previous.deliveryCity;
-			//System.out.println("Wiiiinnnneeer = " + winner);
-			//System.out.println(our_bids);
+			System.out.println("Wiiiinnnneeer = " + agent.name());
+			System.out.println(our_bids.get(our_bids.size()-1));
+			System.out.println(opponent_bids.get(opponent_bids.size()-1));
 			//update biddingFactor depending on previous auctions results
 			double avg = Arrays.stream(bids).mapToInt(i -> (int) i.intValue()).sum();
 			
@@ -123,9 +124,9 @@ public class AuctionTemplate implements AuctionBehavior {
 		this.city_vals.add(dest_city_value);
 		this.task_dists.add(task.pickupCity.distanceTo(task.deliveryCity));
 		if(opponent_bids.size()>5) {
-			double e_opponent_bid= pred.estimated_bid(opponent_bids, our_bids, task_dists, city_vals);
+			double e_opponent_bid= 0.0;//pred.estimated_bid(opponent_bids, our_bids, task_dists, city_vals);
 			if(id==0) {
-				System.out.println("estimated bid: " + e_opponent_bid);
+				//System.out.println("estimated bid: " + e_opponent_bid);
 			}
 		}
 		
@@ -137,7 +138,7 @@ public class AuctionTemplate implements AuctionBehavior {
 		double bid = marginalCost - dest_city_value;
 		if(id==1) {
 			bid= task.pickupCity.distanceTo(task.deliveryCity);
-			System.out.println("real bid: " + bid);
+			//System.out.println("real bid: " + bid);
 		}
 		return (long) Math.round(bid);
 	}

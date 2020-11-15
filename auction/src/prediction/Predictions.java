@@ -39,9 +39,9 @@ public class Predictions {
 		
 		Double current_task= t.remove(t.size()-1);
 		Double current_city_val= city_val.remove(city_val.size()-1);
-		Double x1 = Double.valueOf(0);
-		Double x2 = Double.valueOf(0);
-		Double x3 = Double.valueOf(0);
+		Double x1 = Double.valueOf(x.get(x.size()-1));
+		Double x2 = Double.valueOf(x.get(x.size()-2));
+		Double x3 = Double.valueOf(x.get(x.size()-3));
 		
 		int height = y.size();
 		int width = 6;

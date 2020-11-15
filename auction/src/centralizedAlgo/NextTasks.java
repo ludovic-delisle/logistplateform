@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -52,6 +53,38 @@ public class NextTasks {
 		this.nextTask.put(vehicles.get(0), new LinkedList<Task>(ll_t));
 	}
 	
+	public NextTasks(NextTasks n, Task new_task) {
+	
+		HashMap<Vehicle, LinkedList<Task>> n2 = new HashMap<Vehicle,LinkedList<Task>>();
+		HashMap<Vehicle, LinkedList<Action>> n3 = new HashMap<Vehicle,LinkedList<Action>>();
+		HashMap<Task, LinkedList<Action>> n4 = new HashMap<Task, LinkedList<Action>>();
+		
+		for(Vehicle v: n.nextTask.keySet()) {
+			n2.put(v, new LinkedList<Task>(n.getCurrentTasks(v)));
+			n3.put(v, new LinkedList<Action>(n.getCurrentActions(v)));
+		}
+		
+		n4.putAll(n.get_map());
+		this.nextTask=n2;
+		this.nextAction=n3;
+		this.taskActionMap=n4;
+		
+		Action p = new Pickup(new_task);
+		Action d = new Delivery(new_task);
+		LinkedList<Action> new_action_list = new LinkedList<Action>();
+		new_action_list.add(p);
+		new_action_list.add(d);
+		taskActionMap.put(new_task, new_action_list);
+		
+		
+		Map.Entry<Vehicle, LinkedList<Action>> entry = n3.entrySet().iterator().next();
+		Vehicle key = entry.getKey();
+		this.add(key, new_task);
+		this.add_actions(key, new_task);
+		
+	}
+	
+	
 	/**
 	 * Creates a new NextTasks object by assigning the tasks in a random order to randomly chosen vehicles
 	 * @param vehicles: 
@@ -87,6 +120,46 @@ public class NextTasks {
 				random_vehicle = vehicles.get(rand.nextInt(vehicles.size()));
 			}while(random_vehicle.capacity() <= (nextTask.get(random_vehicle).size()+1)*t.weight);
 			*/
+			this.add(random_vehicle, t);
+			this.add_actions(random_vehicle,  t);
+			
+		}
+		
+		for(Vehicle ve: vehicles) {
+			// shuffle the order of tasks that are assigned to each vehicle
+			Collections.shuffle(nextTask.get(ve), rand);
+			
+		}
+		
+		
+	}
+	public NextTasks(List<Vehicle> vehicles, List<Task> tasks, Random rand) {
+		this.nextTask = new HashMap<Vehicle,LinkedList<Task>>();
+		this.nextAction = new HashMap<Vehicle,LinkedList<Action>>();
+		this.taskActionMap= new HashMap<Task,LinkedList<Action>>();
+		
+		for(Vehicle v: vehicles) {
+			this.nextTask.put(v, new LinkedList<Task>());
+			this.nextAction.put(v, new LinkedList<Action>());
+		}
+
+		for(Task t: tasks) {
+			//Add pickup and delivery action to the map with their corresponding task
+			this.taskActionMap.put(t, new LinkedList<Action>());
+			Action p = new Pickup(t);
+			Action d = new Delivery(t);
+			LinkedList<Action> new_action_list = taskActionMap.get(t);
+			new_action_list.add(p);
+			new_action_list.add(d);
+			taskActionMap.put(t, new_action_list);
+			
+			//Assigns the tasks randomly to each vehicle
+			Vehicle random_vehicle;
+			
+			do {
+				random_vehicle = vehicles.get(rand.nextInt(vehicles.size()));
+			}while(random_vehicle.capacity() <= (nextTask.get(random_vehicle).size()+1)*t.weight);
+			
 			this.add(random_vehicle, t);
 			this.add_actions(random_vehicle,  t);
 			

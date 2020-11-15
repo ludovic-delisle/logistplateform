@@ -97,6 +97,47 @@ public class NextTasks {
 		
 		
 	}
+	public NextTasks(List<Vehicle> vehicles, List<Task> tasks, Random rand) {
+		this.nextTask = new HashMap<Vehicle,LinkedList<Task>>();
+		this.nextAction = new HashMap<Vehicle,LinkedList<Action>>();
+		this.taskActionMap= new HashMap<Task,LinkedList<Action>>();
+		
+		for(Vehicle v: vehicles) {
+			this.nextTask.put(v, new LinkedList<Task>());
+			this.nextAction.put(v, new LinkedList<Action>());
+		}
+
+		for(Task t: tasks) {
+			//Add pickup and delivery action to the map with their corresponding task
+			this.taskActionMap.put(t, new LinkedList<Action>());
+			Action p = new Pickup(t);
+			Action d = new Delivery(t);
+			LinkedList<Action> new_action_list = taskActionMap.get(t);
+			new_action_list.add(p);
+			new_action_list.add(d);
+			taskActionMap.put(t, new_action_list);
+			
+			//Assigns the tasks randomly to each vehicle
+			Vehicle random_vehicle;
+			
+			do {
+				random_vehicle = vehicles.get(rand.nextInt(vehicles.size()));
+			}while(random_vehicle.capacity() <= (nextTask.get(random_vehicle).size()+1)*t.weight);
+			
+			this.add(random_vehicle, t);
+			this.add_actions(random_vehicle,  t);
+			
+		}
+		
+		for(Vehicle ve: vehicles) {
+			// shuffle the order of tasks that are assigned to each vehicle
+			Collections.shuffle(nextTask.get(ve), rand);
+			
+		}
+		
+		
+	}
+	
 	
 	// get the cumulative weight of all tasks
 	public int get_all_task_weight(List<Task> ll_t) {
