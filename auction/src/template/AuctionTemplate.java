@@ -135,7 +135,7 @@ public class AuctionTemplate implements AuctionBehavior {
 		
 
 		double ratio = 1.0 + (random.nextDouble() * state.getBiddingFactor() * task.reward);
-		double bid = marginalCost - dest_city_value;
+		double bid = marginalCost;
 		if(id==1) {
 			bid= task.pickupCity.distanceTo(task.deliveryCity);
 			//System.out.println("real bid: " + bid);

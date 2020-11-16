@@ -3,6 +3,7 @@ package template;
 //the list of imports
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -48,12 +49,18 @@ public class Auction_ludo implements AuctionBehavior {
 	private List<Long> our_bids= new ArrayList<Long>();
 	private List<Task> tasks = new ArrayList<Task>();
 	private List<Task> my_tasks = new ArrayList<Task>();
-	private List<Task> my_maybe_tasks = new ArrayList<Task>();
+	private HashMap<Vehicle, TaskSet> vehicle_tasks_map=new HashMap<Vehicle, TaskSet>();
 	private NextTasks current_sol;
 	private NextTasks on_wait_sol;
 	private Double tot_reward=0.0;
 	private Double current_cost=0.0;
 	private Double fiction_cost=0.0;
+	private boolean give_to_one;
+	private boolean first_win=true;
+	private TaskSet new_task_list_1;
+	private TaskSet new_task_list_2;
+	private int SLS_limit=10;
+	private double addaptive_coeff=0.99;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -69,6 +76,8 @@ public class Auction_ludo implements AuctionBehavior {
 
 		this.state = State.MakeEmptyState(agent.vehicles().get(0), agent.getTasks());
 		//System.out.println("Ttttttttttt");
+		
+		this.vehicle_tasks_map.put(vehicles.get(0), null);
 		
 		
 		long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
@@ -87,11 +96,30 @@ public class Auction_ludo implements AuctionBehavior {
 		}
 		
 		if (winner == agent.id()) {
-			System.out.print(bids[winner]);
+			if(first_win) {
+				first_win=false;
+				new_task_list_1 = TaskSet.noneOf(agent.getTasks());
+				new_task_list_2 = TaskSet.noneOf(agent.getTasks());
+			}
+			
+			HashMap<Vehicle, LinkedList<Task>> nt = on_wait_sol.get_nextTask();
+			
+			System.out.println("before " + new_task_list_1.size()+" "+new_task_list_2.size());
+			System.out.println(nt.get(vehicles.get(0)).size());
+			System.out.println(nt.get(vehicles.get(1)).size());
+			if(nt.get(vehicles.get(0)).size()>new_task_list_1.size()) {
+				new_task_list_1.add(previous);
+				System.out.println("size of 1 increased");
+			}
+			else {
+				new_task_list_2.add(previous);
+				System.out.println("size of 2 increased");
+			}
+			System.out.println("after " + new_task_list_1.size()+" "+new_task_list_2.size());
 			current_sol=on_wait_sol;
 			tot_reward+=our_bids.get(our_bids.size()-1);
-			current_cost=fiction_cost;
-			
+			current_cost+=fiction_cost;
+			//vehicle_tasks_map=current_sol.get_nextTask();
 			vehicles.get(0).getCurrentTasks().add(previous);
 			currentCity = previous.deliveryCity;
 			System.out.println("Wiiiinnnneeer = " + agent.name());
@@ -106,6 +134,16 @@ public class Auction_ludo implements AuctionBehavior {
 				state.updateBiddingFactor(-0.01);
 			}else {
 				state.updateBiddingFactor(+0.01);
+			}
+			if(my_tasks.size()>SLS_limit) {
+				if(give_to_one) {
+					new_task_list_1.add(previous);
+					vehicle_tasks_map.put(vehicles.get(0),  new_task_list_1);
+				}
+				else {
+					new_task_list_2.add(previous);
+					vehicle_tasks_map.put(vehicles.get(1),  new_task_list_2);
+				}
 			}
 		}
 		else {
@@ -137,36 +175,58 @@ public class Auction_ludo implements AuctionBehavior {
 	
 	@Override
 	public Long askPrice(Task task) {
+		double bid=0;
 		Double dest_city_value = agent.readProperty("city_value_factor",  Double.class, 0.0)*(1 - distribution.probability(task.deliveryCity, null));
 		tasks.add(task);
-		
-		my_tasks.add(task);
-		
-		if(current_sol==null) {
-			on_wait_sol = new NextTasks(vehicles, my_tasks , rand);
-		}
-		else {
-			on_wait_sol = new NextTasks(on_wait_sol, task);
-		}
-		
-		LocalSearch SLS = new LocalSearch(vehicles, my_tasks);
-		
-		on_wait_sol = SLS.SLSAlgo_no_random(3000, on_wait_sol, 3);
-		System.out.println("not here = ");
-		LinkedList<Plan> plans = SLS.create_plan(on_wait_sol);
 		double marginalCost=0.0;
-		
-		for(int i=0 ; i< plans.size(); i++) {
-			marginalCost+=vehicles.get(i).costPerKm()*plans.get(i).totalDistance();
+		my_tasks.add(task);
+		if(my_tasks.size()<=SLS_limit) {
+			if(current_sol==null) {
+				on_wait_sol = new NextTasks(vehicles, my_tasks , rand);
+			}
+			else {
+				on_wait_sol = new NextTasks(on_wait_sol, task);
+			}
 			
+			LocalSearch SLS = new LocalSearch(vehicles, my_tasks);
+			
+			on_wait_sol = SLS.SLSAlgo_no_random(3000, on_wait_sol, 2, 5);
+			LinkedList<Plan> plans = SLS.create_plan(on_wait_sol);
+			
+			
+			for(int i=0 ; i< plans.size(); i++) {
+				marginalCost+=vehicles.get(i).costPerKm()*plans.get(i).totalDistance();
+				
+			}
+			fiction_cost = marginalCost-(current_cost*addaptive_coeff);
+			
+			bid =fiction_cost;
 		}
-		fiction_cost=marginalCost;
-		//State startState = new State(vehicles.get(0), agent.getTasks());
-		//double marginalCost = Astar.marginalCost(startState, task, Heuristic.DISTANCE);
 		
-
-		double ratio = 1.0 + (random.nextDouble() * state.getBiddingFactor() * task.reward);
-		double bid = fiction_cost-tot_reward;
+		else if(my_tasks.size()>SLS_limit) {
+			System.out.println("before " + new_task_list_1.size()+" "+new_task_list_2.size());
+			TaskSet tasks_1= TaskSet.copyOf(new_task_list_1);
+			tasks_1.add(task);
+			State startState = new State(vehicles.get(0), tasks_1);
+			Double marginalCost_1 = Astar.marginalCost(startState, task, Heuristic.DISTANCE);
+			
+			TaskSet tasks_2= TaskSet.copyOf(new_task_list_2);
+			tasks_2.add(task);
+			State startState_2 = new State(vehicles.get(1), tasks_2);
+			Double marginalCost_2 = Astar.marginalCost(startState_2, task, Heuristic.DISTANCE);
+			
+			if(marginalCost_1<marginalCost_2) {
+				bid=marginalCost_1*addaptive_coeff;
+				give_to_one=true;
+			}
+			else {
+				bid=marginalCost_2*addaptive_coeff;
+				give_to_one=false;
+			}
+			System.out.println("after " + new_task_list_1.size()+" "+new_task_list_2.size());
+		}
+		
+		
 		
 		return (long) Math.round(bid);
 	}

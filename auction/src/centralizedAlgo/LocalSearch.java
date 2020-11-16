@@ -49,7 +49,7 @@ public class LocalSearch {
 		int n_step_threshold=1; //threshold above which we stop increasing n_steps and do a random restart
 		final long startTime = System.currentTimeMillis();
 		//System.out.println("Best ca tournenee normal");
-		while(System.currentTimeMillis() - startTime < 60000) {
+		while(System.currentTimeMillis() - startTime < 1000) {
 			//System.out.println("Best ca foooort normal");
 
 			NextTasks candidate_solution = new NextTasks(solution);
@@ -82,11 +82,12 @@ public class LocalSearch {
 		}
 		return best_solution;
 	}
-	public NextTasks SLSAlgo_no_random(long timeout, NextTasks solution, int n) {
+	public NextTasks SLSAlgo_no_random(long timeout, NextTasks solution, int n, int iter) {
 
 		
 		NextTasks best_solution = new NextTasks(solution);
 		boolean rand_once=false;
+		int n_iter=0;
 		int n_step=0; //current degree of neighbors of neighbors that we compute
 		int n_step_threshold=n; //threshold above which we stop increasing n_steps and do a random restart
 		final long startTime = System.currentTimeMillis();
@@ -114,10 +115,10 @@ public class LocalSearch {
 					
 				}
 			// if we exceeded a given amount of steps, we restart the search with another random initial guess (same seed)
-			}else if(n_step>=n_step_threshold && !rand_once) {
+			}else if(n_step>=n_step_threshold && n_iter<iter) {
 				solution=new NextTasks(vehicles, Task_list, rand);
 				n_step=0;
-				rand_once=true;
+				n_iter+=1;
 			// otherwise we just increase the steps counter
 			}else if(n_step>=n_step_threshold) {
 				return best_solution;

@@ -329,5 +329,8 @@ public class NextTasks {
 		
 		this.nextAction.put(v, new_action_list);
 	}
+	public  HashMap<Vehicle, LinkedList<Task>> get_nextTask(){
+		return this.nextTask;
+	}
 	
 }
