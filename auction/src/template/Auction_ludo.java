@@ -232,7 +232,7 @@ public class Auction_ludo implements AuctionBehavior {
 				marginalCost+=vehicles.get(i).costPerKm()*plans.get(i).totalDistance();
 				
 			}
-			fiction_cost = marginalCost-(current_cost*addaptive_coeff);
+			fiction_cost = marginalCost-current_cost;
 			
 			bid =fiction_cost;
 		}
