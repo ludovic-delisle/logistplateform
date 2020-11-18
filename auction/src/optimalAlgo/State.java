@@ -247,6 +247,9 @@ public class State{
 	public City getCurrentCity(){
 		return current_city;
 	}
+	public void set_city(City c) {
+		this.current_city=c;
+	}
 	public TaskSet getTasks() {
 		return available_tasks;
 	}
@@ -299,6 +302,7 @@ public class State{
 	public void updateBiddingFactor(double increment) {
 		this.biddingFactor += increment;
 	}
+	
 	
 	public void print_carrying() {
 		double res=0.0;

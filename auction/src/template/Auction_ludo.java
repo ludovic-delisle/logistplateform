@@ -48,8 +48,11 @@ public class Auction_ludo implements AuctionBehavior {
 	private List<Long> opponent_bids= new ArrayList<Long>();
 	private List<Long> our_bids= new ArrayList<Long>();
 	private List<Task> tasks = new ArrayList<Task>();
+	private List<Double> tasks_dist = new ArrayList<Double>();
 	private List<Task> my_tasks = new ArrayList<Task>();
+	private List<Task> opponent_tasks = new ArrayList<Task>();
 	private HashMap<Vehicle, TaskSet> vehicle_tasks_map=new HashMap<Vehicle, TaskSet>();
+	private List<Double> city_vals = new ArrayList<Double>();
 	private NextTasks current_sol;
 	private NextTasks on_wait_sol;
 	private Double tot_reward=0.0;
@@ -61,6 +64,7 @@ public class Auction_ludo implements AuctionBehavior {
 	private TaskSet new_task_list_2;
 	private int SLS_limit=10;
 	private double addaptive_coeff=0.99;
+	private City opponent_start_city_guess;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -93,6 +97,11 @@ public class Auction_ludo implements AuctionBehavior {
 		else {
 			opponent_bids.add(bids[0]);
 			our_bids.add(bids[1]);
+		}
+		
+		if(tasks.size()==1) {
+			opponent_start_city_guess=guess_opponent_city(opponent_bids.get(0), previous);
+			System.out.println(opponent_start_city_guess.name);
 		}
 		
 		if (winner == agent.id()) {
@@ -153,6 +162,26 @@ public class Auction_ludo implements AuctionBehavior {
 		}
 		
 	}
+	public City guess_opponent_city(double opponent_bid, Task task) {
+		
+		Double task_dist= task.pickupCity.distanceTo(task.deliveryCity);
+		Double task_expenses = vehicles.get(0).costPerKm()*task_dist;
+		Double cost_to_go_to_task = opponent_bid-task_expenses;
+		
+		City opponent_start_city = null;
+		Double smallest_diff= Double.POSITIVE_INFINITY;
+		
+		for(City city : topology.cities()) {
+			double diff = Math.abs(cost_to_go_to_task - vehicles.get(0).costPerKm()*task.pickupCity.distanceTo(city));
+			
+			if(diff<smallest_diff) {
+				smallest_diff=diff;
+				opponent_start_city=city;
+			}
+		}
+		
+		return opponent_start_city;
+	}
 	
 	/*
 	public Long askPriceTemplate(Task task) {
@@ -175,9 +204,14 @@ public class Auction_ludo implements AuctionBehavior {
 	
 	@Override
 	public Long askPrice(Task task) {
+		Predictions pred= new Predictions();
+		
 		double bid=0;
 		Double dest_city_value = agent.readProperty("city_value_factor",  Double.class, 0.0)*(1 - distribution.probability(task.deliveryCity, null));
+		city_vals.add(dest_city_value);
 		tasks.add(task);
+		tasks_dist.add(task.pickupCity.distanceTo(task.deliveryCity));
+		
 		double marginalCost=0.0;
 		my_tasks.add(task);
 		if(my_tasks.size()<=SLS_limit) {
@@ -204,7 +238,7 @@ public class Auction_ludo implements AuctionBehavior {
 		}
 		
 		else if(my_tasks.size()>SLS_limit) {
-			System.out.println("before " + new_task_list_1.size()+" "+new_task_list_2.size());
+			
 			TaskSet tasks_1= TaskSet.copyOf(new_task_list_1);
 			tasks_1.add(task);
 			State startState = new State(vehicles.get(0), tasks_1);
@@ -223,11 +257,10 @@ public class Auction_ludo implements AuctionBehavior {
 				bid=marginalCost_2*addaptive_coeff;
 				give_to_one=false;
 			}
-			System.out.println("after " + new_task_list_1.size()+" "+new_task_list_2.size());
+			
 		}
-		
-		
-		
+	
+
 		return (long) Math.round(bid);
 	}
 	
