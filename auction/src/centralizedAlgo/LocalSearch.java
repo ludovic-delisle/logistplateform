@@ -1,7 +1,6 @@
 package centralizedAlgo;
 
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -20,37 +19,75 @@ import logist.task.Task;
 public class LocalSearch {
 	private List<Vehicle> vehicles;
 	private TaskSet availableTasks;
-	private List<Task> Task_list;
 	Random rand = new Random(42);
 	
 	public LocalSearch(List<Vehicle> vehicles1, TaskSet availableTasks1){
 		this.vehicles = vehicles1;
 		this.availableTasks = availableTasks1;
 	}
-	public LocalSearch(List<Vehicle> vehicles1, List<Task> task_list){
-		this.vehicles = vehicles1;
-		this.Task_list = task_list;
-	}
 	
 	/**
 	 * Executes the Stochastic Local Search Algorithm with greedy descent and random restart
 	 * @return The Set of tasks with the smallest cost (not optimal)
-	 */
-	public NextTasks SLSAlgo() {
-		//System.out.println("Best ca foooort normal" + availableTasks.size());
-		NextTasks solution = new NextTasks(vehicles, availableTasks, rand);
-		//System.out.println("Best ca " + availableTasks.size());
-
+	 */	
+	public NextTasks SLSAlgoConsolidation(long timeout, NextTasks solution, int n, int iter) {
+		
+		final long startTime = System.currentTimeMillis();
 		NextTasks best_solution = new NextTasks(solution);
-		//System.out.println("Best ca foooort normal" + availableTasks.size());
+		int n_iter=0;
+		int n_step=0; //current degree of neighbors of neighbors that we compute
+		int n_step_threshold=n; //threshold above which we stop increasing n_steps and do a random restart
+		//System.out.println(200);
+		
+		while(System.currentTimeMillis() - startTime < timeout) {
+			//System.out.println(300);
+			NextTasks candidate_solution = new NextTasks(solution);
+			HashSet<NextTasks> sol_set = new HashSet<NextTasks>();
+			sol_set.add(candidate_solution);
+			Set<NextTasks> A = choose_neighbour_actions(sol_set);
+			
+			for(int i =0; i<n_step; i++) {
+				//here we search for all the neighbors up to i transformations away from the initial solution
+				A=choose_neighbour_actions(A);
+			}
+			//System.out.println(400);
+			candidate_solution = local_choice_actions(A);
+			//System.out.println(401);
+			if(cost_action(candidate_solution) < cost_action(solution)) {
+				n_step=0;
+				//System.out.println(500);
+				solution = candidate_solution;
+				if(cost_action(candidate_solution) < cost_action(best_solution)) {
+					System.out.println("Best global cost: "+ cost_action(candidate_solution));
+					best_solution=candidate_solution;
+					
+				}
+			// if we exceeded a given amount of steps, we restart the search with another random initial guess (same seed)
+			}else if(n_step>=n_step_threshold && n_iter<iter) {
+				//System.out.println(401);
+				solution=new NextTasks(vehicles, availableTasks, rand);
+				n_step=0;
+				n_iter+=1;
+			// otherwise we just increase the steps counter
+			}else if(n_step>=n_step_threshold) {
+				return best_solution;
+			}
+			else n_step+=1;	
+		}
+		//System.out.println(600);
+		return best_solution;
+	}
+	
+	public NextTasks SLSAlgo(long timeout) {
+		NextTasks solution = new NextTasks(vehicles, availableTasks, rand);
+		NextTasks best_solution = new NextTasks(solution);
 
 		
 		int n_step=0; //current degree of neighbors of neighbors that we compute
 		int n_step_threshold=1; //threshold above which we stop increasing n_steps and do a random restart
 		final long startTime = System.currentTimeMillis();
-		//System.out.println("Best ca tournenee normal");
-		while(System.currentTimeMillis() - startTime < 1000) {
-			//System.out.println("Best ca foooort normal");
+
+		while(System.currentTimeMillis() - startTime < timeout) {
 
 			NextTasks candidate_solution = new NextTasks(solution);
 			HashSet<NextTasks> sol_set = new HashSet<NextTasks>();
@@ -82,62 +119,8 @@ public class LocalSearch {
 		}
 		return best_solution;
 	}
-	public NextTasks SLSAlgo_no_random(long timeout, NextTasks solution, int n, int iter) {
+	
 
-		
-		NextTasks best_solution = new NextTasks(solution);
-		boolean rand_once=false;
-		int n_iter=0;
-		int n_step=0; //current degree of neighbors of neighbors that we compute
-		int n_step_threshold=n; //threshold above which we stop increasing n_steps and do a random restart
-		final long startTime = System.currentTimeMillis();
-		
-		while(System.currentTimeMillis() - startTime < timeout - 1000) {
-			NextTasks candidate_solution = new NextTasks(solution);
-			HashSet<NextTasks> sol_set = new HashSet<NextTasks>();
-			sol_set.add(candidate_solution);
-			Set<NextTasks> A = choose_neighbour_actions_with_Task_List(sol_set);
-			
-			for(int i =0; i<n_step; i++) {
-				//here we search for all the neighbors up to i transformations away from the initial solution
-				A=choose_neighbour_actions_with_Task_List(A);
-			}
-			
-			candidate_solution = local_choice_actions(A);
-			
-			if(cost_action(candidate_solution) < cost_action(solution)) {
-				n_step=0;
-				
-				solution = candidate_solution;
-				if(cost_action(candidate_solution) < cost_action(best_solution)) {
-					//System.out.println("Best global cost: "+ cost_action(candidate_solution));
-					best_solution=candidate_solution;
-					
-				}
-			// if we exceeded a given amount of steps, we restart the search with another random initial guess (same seed)
-			}else if(n_step>=n_step_threshold && n_iter<iter) {
-				solution=new NextTasks(vehicles, Task_list, rand);
-				n_step=0;
-				n_iter+=1;
-			// otherwise we just increase the steps counter
-			}else if(n_step>=n_step_threshold) {
-				return best_solution;
-			}
-			else n_step+=1;	
-		}
-		return best_solution;
-	}
-	
-	
-	/**
-	 * Selects object with least cost among the list 
-	 * @param task_list
-	 * @return the NextTasks object with the smallest cost
-	 */
-	public NextTasks local_choice(Set<NextTasks> task_list) {
-		return task_list.stream().collect(Collectors.minBy(Comparator.comparing(i->cost(i)))).get();
-	}
-	
 	/**
 	 * Same as above but for multiple tasks carried by a single vehicle
 	 * @param task_list
@@ -175,28 +158,6 @@ public class LocalSearch {
 		return total_cost;
 	}
 	
-	// this version is for the single task option
-		public double cost(NextTasks n) {
-			Double total_cost = 0.0;
-			
-			for(Vehicle v: vehicles) {
-				// dist to pickup the task
-				Task first_task = n.getFirstTask(v);
-				if(first_task != null) total_cost += v.getCurrentCity().distanceTo(n.getFirstTask(v).pickupCity) * v.costPerKm();
-				// dist to complete the remaining tasks
-				List<Task> ll_t = n.getCurrentTasks(v);
-				for(int i=0; i < ll_t.size()-1; ++i) {
-					Task t1 = ll_t.get(i);
-					Task t2 = ll_t.get(i+1);
-					total_cost += t1.pathLength() * v.costPerKm();
-					total_cost += t1.deliveryCity.distanceTo(t2.pickupCity) * v.costPerKm();
-				}
-				if(ll_t.size() > 0) total_cost += ll_t.get(ll_t.size()-1).pathLength() * v.costPerKm();
-				
-			}
-			return total_cost;
-		}
-
 	/**
 	 * Computes a set of all the neighboring plans that we can obtain with a single transformation
 	 * @param one_step_Sol
@@ -213,48 +174,6 @@ public class LocalSearch {
 				}
 				List<NextTasks> swaped_vehicles_tasks = new LinkedList<NextTasks>(initialSol.swap_action_vehicle(v, vehicles));
 				swaped_vehicles_tasks.stream().filter(i -> checkConstraints_actions(i));
-				next_tasks_set.addAll(swaped_vehicles_tasks);
-			}
-		}
-		return next_tasks_set;
-	}
-	
-	public Set<NextTasks> choose_neighbour_actions_with_Task_List(Set<NextTasks> one_step_Sol) {
-		Set<NextTasks> next_tasks_set = new HashSet<NextTasks>();
-		for(NextTasks initialSol:one_step_Sol) {
-			for(Vehicle v: vehicles) {
-				final List<Action> l_t = new LinkedList<Action>(initialSol.getCurrentActions(v));
-				for(Action a: l_t) {
-					NextTasks n = new NextTasks(initialSol.swap_action_order(v, a));
-					if(checkConstraints_actions_with_task_list(n)) next_tasks_set.add(n);	
-				}
-				List<NextTasks> swaped_vehicles_tasks = new LinkedList<NextTasks>(initialSol.swap_action_vehicle(v, vehicles));
-				swaped_vehicles_tasks.stream().filter(i -> checkConstraints_actions_with_task_list(i));
-				next_tasks_set.addAll(swaped_vehicles_tasks);
-			}
-		}
-		return next_tasks_set;
-	}
-	
-	/**
-	 * Computes a set of all the neighboring plans that we can obtain with a single transformation
-	 * @param one_step_Sol
-	 * @return Set of neighboring NextTasks objects
-	 */
-	public Set<NextTasks> choose_neighbours(Set<NextTasks> one_step_Sol) {
-		Set<NextTasks> next_tasks_set = new HashSet<NextTasks>();
-		for(NextTasks initialSol:one_step_Sol) {
-			for(Vehicle v: vehicles) {
-				final List<Task> l_t = new LinkedList<Task>(initialSol.getCurrentTasks(v));
-				for(Task t: l_t) {
-					NextTasks n = new NextTasks(initialSol.swap_task_order(v, t));
-					// complexity does not allow for these additional transformations
-					//NextTasks n2 = new NextTasks(initialSol.swap_task_order_2(v, t));
-					if(checkConstraints(n)) next_tasks_set.add(n);	
-					//if(checkConstraints(n2)) next_tasks_set.add(n2);
-				}
-				List<NextTasks> swaped_vehicles_tasks = new LinkedList<NextTasks>(initialSol.swap_task_vehicle(v, vehicles));
-				swaped_vehicles_tasks.stream().filter(i -> checkConstraints(i));
 				next_tasks_set.addAll(swaped_vehicles_tasks);
 			}
 		}
@@ -297,67 +216,6 @@ public class LocalSearch {
 				}
 			}
 		}	
-		return true;
-	}
-	
-	/**
-	 * Check if a proposal of NextTasks respects the constraints
-	 * Note: This version allows a vehicle to carry multiple tasks at a time
-	 * @param nextTask the NextTasks object to be evaluated
-	 * @return true if the constraints are respected
-	 */
-	public boolean checkConstraints_actions_with_task_list(NextTasks nextTask) {
-		if(nextTask.getSize() != Task_list.size() + vehicles.size()) {
-			return false;
-		}
-		
-		for(Vehicle v: vehicles) {
-			//check for capacity
-			int w=0;
-			for(int i = 0; i < nextTask.getCurrentActions(v).size()-1; i++) {
-				Action a = nextTask.getCurrentActions(v).get(i);
-				if(a.isDelivery()) {
-					w-=a.task().weight;
-				}
-				else {
-					w+=a.task().weight;
-				}
-				//dynamically check if the capacity of the given vehicle is never exceeded
-				if(w>v.capacity()) {
-					return false;
-				}
-				
-				//check for right order
-				for(int j = i+1; j < nextTask.getCurrentActions(v).size(); j++) {
-					Action ac = nextTask.getCurrentActions(v).get(j);
-					if(!a.right_order(ac)) {
-						return false;
-					}
-				}
-			}
-		}	
-		return true;
-	}
-	
-	/**
-	 * Check if a proposal of NextTasks respects the constraints
-	 * Note: this is for the single task version, all the multiple task functions deal with Actions instead of Tasks
-	 * @param nextTask the NextTasks object to be evaluated
-	 * @return true if the constraints are respected
-	 */
-	public boolean checkConstraints(NextTasks nextTask) {
-		// Note: not all the given constraints are checked explicitly because some are assured by design
-		// check if the map doesn't have the correct size
-		if(nextTask.getSize() != availableTasks.size() + vehicles.size()) {
-			return false;
-		}
-		
-		// check if all the tasks assigned to a given vehicle are unique
-		for(Vehicle v: vehicles) {
-			if(nextTask.getCurrentTasks(v).size() == (new HashSet<Task>(nextTask.getCurrentTasks(v)).size())) {
-				return false;
-			}	
-		}
 		return true;
 	}
 	

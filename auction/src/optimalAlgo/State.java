@@ -19,7 +19,6 @@ public class State{
 	private Vehicle vehicle;
 	private double current_cost=0;
 	private TaskSet available_tasks;
-	private List<Task> available_tasks_list;
 	private TaskSet current_tasks;
 	private int remainingCapacity;
 	private City current_city;
@@ -41,18 +40,6 @@ public class State{
 			this.vehicle=vehicle;
 			this.available_tasks=tasks.clone();
 			this.current_tasks=vehicle.getCurrentTasks().clone();
-			this.remainingCapacity= (vehicle.capacity());
-			this.current_city=vehicle.getCurrentCity();
-	}
-	
-	/**
-	 * constructor called from the class DeliberativeTemplate. used to create the first state
-	 * @param vehicle vehicle of the agent 
-	 * @param tasks taskeset of the tasks available in the environment
-	 */
-	public State(Vehicle vehicle, List<Task> TaskList) {
-			this.vehicle=vehicle;
-			this.available_tasks_list = new ArrayList<Task> (TaskList);
 			this.remainingCapacity= (vehicle.capacity());
 			this.current_city=vehicle.getCurrentCity();
 	}
@@ -314,4 +301,5 @@ public class State{
 		System.out.println("");
 		System.out.println(" Wght carr: " + res + " check: " + this.getCurrentTasks().weightSum()+ " rem: "+this.getRemainingCapacity());
 	}
+
 }

@@ -1,13 +1,11 @@
 package prediction;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import logist.task.Task;
-import logist.topology.Topology.City;
 
+// This class uses mutliple linear regression to make an estimate of the opponent's bid
 public class Predictions {
 
 	public Predictions() {
@@ -63,14 +61,6 @@ public class Predictions {
 							   b[5]*x3;
 		
 		return estimated_bid;
-	}
-	
-	
-	private int min(int i, int size) {
-		if(i<size) {
-			return i;
-		}
-		return size;
 	}
 
 	public double[][] matrix_creation(int width, int height, List<Double> x, List<Double> t, List<Double> city_val){

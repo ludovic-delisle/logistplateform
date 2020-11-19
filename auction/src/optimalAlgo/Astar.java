@@ -3,7 +3,6 @@ package optimalAlgo;
 import logist.plan.Plan;
 import logist.task.Task;
 import logist.topology.Topology.City;
-import optimalAlgo.State;
 
 import java.util.*;
 
@@ -54,7 +53,6 @@ public class Astar {
             }
         } 
 	
-		int nSteps = 0;
         State state = startState;
 		StateComparator comparator = new StateComparator();		
 		myPriorityQueue queue = new myPriorityQueue(comparator);
@@ -67,7 +65,6 @@ public class Astar {
 		queue.add(state);
 		
         while (!state.isFinalState() && !queue.isEmpty()) {
-            nSteps += 1;
             state = queue.poll();
             
             if (!queue.isVisited(state) || comparator.isSmaller(state, queue.get(state))) {
@@ -80,7 +77,6 @@ public class Astar {
             throw new IllegalStateException("Error: No final state found");
         }
 		
-		//System.out.println("Plan found after steps: " + nSteps );
 		//System.out.println("The plan is: " + state.toPlan(startCity).toString());
 		return state.toPlan(startCity);
 	}

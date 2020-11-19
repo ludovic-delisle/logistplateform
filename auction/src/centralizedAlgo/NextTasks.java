@@ -28,12 +28,31 @@ public class NextTasks {
 		HashMap<Vehicle, LinkedList<Action>> n3 = new HashMap<Vehicle,LinkedList<Action>>();
 		HashMap<Task, LinkedList<Action>> n4 = new HashMap<Task, LinkedList<Action>>();
 		
-		for(Vehicle v: n.nextTask.keySet()) {
-			n2.put(v, new LinkedList<Task>(n.getCurrentTasks(v)));
-			n3.put(v, new LinkedList<Action>(n.getCurrentActions(v)));
+		//System.out.println(600);
+		if(n != null) {
+			//System.out.println(60011);
+			for(Vehicle v: n.nextTask.keySet()) {
+				//System.out.println(600111);
+				n2.put(v, new LinkedList<Task>(n.getCurrentTasks(v)));
+				//System.out.println(600112);
+				n3.put(v, new LinkedList<Action>(n.getCurrentActions(v)));
+				//System.out.println(600113);
+			}
+			
+			n4.putAll(n.get_map());
 		}
+		//System.out.println(601);
+
+		this.nextTask=n2;
+		this.nextAction=n3;
+		this.taskActionMap=n4;
+	}
+	
+	public NextTasks() {
+		HashMap<Vehicle, LinkedList<Task>> n2 = new HashMap<Vehicle,LinkedList<Task>>();
+		HashMap<Vehicle, LinkedList<Action>> n3 = new HashMap<Vehicle,LinkedList<Action>>();
+		HashMap<Task, LinkedList<Action>> n4 = new HashMap<Task, LinkedList<Action>>();
 		
-		n4.putAll(n.get_map());
 		this.nextTask=n2;
 		this.nextAction=n3;
 		this.taskActionMap=n4;
@@ -187,12 +206,23 @@ public class NextTasks {
 	}
 	
 	public List<Task> getCurrentTasks(Vehicle v) {
-		return nextTask.get(v);
+		if(v != null && nextTask != null && nextTask.containsKey(v))
+			return nextTask.get(v);
+		else
+			return new LinkedList<Task>();
 	}
 	
 	public List<Action> getCurrentActions(Vehicle v){
-		return nextAction.get(v);
+		//System.out.println(700111);
+		if(v != null && nextTask != null && nextTask.containsKey(v)) {
+			//System.out.println(700112);
+			return nextAction.get(v);
+		}else {
+			//System.out.println(700112);
+			return new LinkedList<Action>();
+		}
 	}
+	
 	public HashMap<Task, LinkedList<Action>> get_map(){
 		return taskActionMap;
 	}
@@ -203,31 +233,12 @@ public class NextTasks {
 		else return l_t.get(0);
 	}
 	
-	public Integer getTime(Vehicle v, Task t) {
-		LinkedList<Task> ll_t = nextTask.get(v);
-		int idx = ll_t.indexOf(t);
-		if(idx > -1) return idx+1;
-		else return 0;
-	}
-	
 	public Integer getSize() {
 		int nb_tasks=0;
 		for(Vehicle v: nextTask.keySet()) {
 			nb_tasks += nextTask.get(v).size() + 1;	
 		}
 		return nb_tasks;
-	}
-	
-	// swaps the current task with the next one in the list of tasks
-	public NextTasks swap_task_order(Vehicle v, Task t) {
-		NextTasks res = new NextTasks(this);
-		LinkedList<Task> ll_t = res.nextTask.get(v);
-		int idx = ll_t.indexOf(t);
-
-		if(idx > -1 && idx < ll_t.size()-1) {
-			Collections.swap(ll_t, idx, idx+1);
-		}
-		return res;
 	}
 	
 	// swaps the current action with the next one in the list of actions
@@ -240,43 +251,6 @@ public class NextTasks {
 			Collections.swap(ll_t, idx, idx+1);
 		}
 		return res;
-	}
-	
-	// swaps the current task with the one 3 steps away
-	public NextTasks swap_task_order_2(Vehicle v, Task t) {
-		NextTasks res = new NextTasks(this);
-		LinkedList<Task> ll_t = res.nextTask.get(v);
-		int idx = ll_t.indexOf(t);
-
-		if(idx > -1 && idx < ll_t.size()-3) {
-			Collections.swap(ll_t, idx, idx+3);
-		}
-		return res;
-	}
-	
-	// swaps the first and the last task
-	public NextTasks swap_task_order_3(Vehicle v) {
-		NextTasks res = new NextTasks(this);
-		LinkedList<Task> ll_t = res.nextTask.get(v);
-		Collections.swap(ll_t, 0, ll_t.size()-1);
-		
-		return res;
-	}
-	
-	// assigns a given task to another vehicle
-	public List<NextTasks> swap_task_vehicle(Vehicle v1, final List<Vehicle> vv2) {
-		List<NextTasks> res_list = new LinkedList<NextTasks>();
-		List<Task> l_t = new ArrayList<Task>(this.getCurrentTasks(v1));
-		for(Task t1: l_t) {
-			for(Vehicle v2: vv2) {
-				NextTasks res = new NextTasks(this);
-				 if(!v1.equals(v2))
-				 	res.remove(v1, t1);
-				 	res.add(v2, t1);
-				 	res_list.add(res);
-			}
-		}
-		return res_list;
 	}
 	
 	// Same as above but for multiple tasks version

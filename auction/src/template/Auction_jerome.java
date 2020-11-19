@@ -37,7 +37,7 @@ import prediction.Predictions;
  * 
  */
 @SuppressWarnings("unused")
-public class Auction_rendu implements AuctionBehavior {
+public class Auction_jerome implements AuctionBehavior {
 
 	Random rand=new Random(9);
 	
@@ -45,20 +45,15 @@ public class Auction_rendu implements AuctionBehavior {
 	private TaskDistribution distribution;
 	private Agent agent;
 	
-	private List<Vehicle> vehicles=new ArrayList<Vehicle>(); // A remplacer par une Liste de véhicules 
 	private List<Long> our_bids= new ArrayList<Long>();
 	private List<ArrayList<Long>> bids_table= new ArrayList<ArrayList<Long>>();
-	private List<Task> tasks = new ArrayList<Task>();
-	private List<Task> my_tasks = new ArrayList<Task>();
-	private List<TaskSet> vehicle_tasks=new ArrayList<TaskSet>();
 	
 	private NextTasks current_sol;
 	private NextTasks on_wait_sol;
 	
-	
 	private Double tot_reward=0.0;
 	private Double current_cost=0.0;
-	private Double fiction_cost=0.0;
+	private Double newCost=0.0;
 	private boolean first_win=true;
 	private boolean first_bid=true;
 	
@@ -67,10 +62,10 @@ public class Auction_rendu implements AuctionBehavior {
 	private int SLS_limit=5;
 	private double addaptive_coeff=0.99;
 	private long timeoutSetup, timeoutBid, timeoutPlan;
-	
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
+		System.out.println(1);
 		LogistSettings ls = null;
         try {
             ls = Parsers.parseSettings("config" + File.separator + "settings_auction.xml");
@@ -81,158 +76,127 @@ public class Auction_rendu implements AuctionBehavior {
         timeoutSetup = ls.get(LogistSettings.TimeoutKey.SETUP);
         timeoutBid = ls.get(LogistSettings.TimeoutKey.BID);
         timeoutPlan = ls.get(LogistSettings.TimeoutKey.PLAN);
-        
+        System.out.println(2);
 		this.topology = topology;
 		this.distribution = distribution;
-
 		this.agent = agent;
-		this.vehicles.addAll(agent.vehicles());
-		
+		System.out.println(3);
 	}
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
-		
+		System.out.println(4);
+		// int the data struct that stores the bid history
 		if(first_bid) {
 			first_bid=false;
 			for(int i=0; i<bids.length; i++) {
 				bids_table.add(new ArrayList<Long>());
 			}
 		}
+		// add bids to data struct
 		for(int i=0; i<bids.length; i++) {
 			bids_table.get(i).add(bids[i]);
 			if(agent.id() == i) {
 				our_bids.add(bids[i]);
 			}
 		}
-		
+		// in case of win
 		if (winner == agent.id()) {
-			SLS_limit=8-vehicles.size();
-			if(first_win) {
-				first_win=false;
-				for(int i=0; i<vehicles.size() ; i++) {
-					vehicle_tasks.add(TaskSet.noneOf(agent.getTasks()));
-				}
-			}
+			
 			HashMap<Vehicle, LinkedList<Task>> nt = on_wait_sol.get_nextTask();
-			
-			if(my_tasks.size()>SLS_limit) {
-				vehicle_tasks.get(vehicle_index).add(previous);
-			}else {
-				for(int i=0; i<vehicles.size(); i++) {
-					if(nt.get(vehicles.get(i)).size()>vehicle_tasks.get(i).size()) {
-						vehicle_tasks.get(i).add(previous);
-						break;
-					}
-				}
-			}
-			System.out.println(4);
+			current_cost = newCost;
+			// current sol becomes the hypotheticalWinSol
 			current_sol=on_wait_sol;
-			
 			tot_reward+=our_bids.get(our_bids.size()-1);
-			
-			current_cost+=fiction_cost;
 			
 			
 			System.out.println("Winner = " + agent.name());
-			System.out.println("bids " + bids[0] + "  " + bids[1]);
+			System.out.println("winner bid " + bids[0] + " other " + bids[1]);
 			//update biddingFactor depending on previous auctions results
 			double avg = Arrays.stream(bids).mapToInt(i -> (int) i.intValue()).sum();
 			System.out.println(5);
 			
-		}
-		else {
+		} else {
 			on_wait_sol=current_sol;
-			my_tasks.remove(my_tasks.size()-1);
-			fiction_cost=current_cost;
 		}
-		
+		System.out.println(5);
 	}
 	
 	
 	
 	@Override
 	public Long askPrice(Task task) {
+		System.out.println(6);
 		final long startTime = System.currentTimeMillis();
-		System.out.println(1);
 		double bid=0;
-		Double dest_city_value = agent.readProperty("city_value_factor",  Double.class, 0.0)*(1 - distribution.probability(task.deliveryCity, null));
-		TaskSet hypotheticalWinTaskSet = agent.getTasks().clone();
-		hypotheticalWinTaskSet.add(task);
-		tasks.add(task);
-		System.out.println(2);
+		double dest_city_value = agent.readProperty("city_value_factor",  Double.class, 0.0)*(1 - distribution.probability(task.deliveryCity, null));
+		double marginalCost=Integer.MAX_VALUE;
+		double astarMarginalCost = Integer.MAX_VALUE;
+		double current_marge_cost=0.0;
+		double expected_profit = 0.0;
+		//System.out.println(7);
 		
-		double marginalCost=0.0;
-		my_tasks.add(task);
-		System.out.println(3);
-		if(my_tasks.size()<=SLS_limit) {
-			if(current_sol==null) {
-				on_wait_sol = new NextTasks(vehicles, hypotheticalWinTaskSet , rand);
+		for(int i=0; i<agent.vehicles().size(); i++) {
+			State startState= new State(agent.vehicles().get(i), agent.vehicles().get(i).getCurrentTasks().clone());
+			current_marge_cost = Astar.marginalCost(startState, task, Heuristic.DISTANCE);
+			if(current_marge_cost<astarMarginalCost) {
+				astarMarginalCost=current_marge_cost;
+				this.vehicle_index=i;
 			}
-			else {
+		}
+		//System.out.println(8);
+		final long RemaingTime = timeoutBid - (System.currentTimeMillis() - startTime);
+		if(RemaingTime < 2000) return (long) Math.round(astarMarginalCost + expected_profit);
+		else {
+			TaskSet hypotheticalWinTaskSet = agent.getTasks().clone();
+			hypotheticalWinTaskSet.add(task);
+			if(current_sol==null) {
+				on_wait_sol = new NextTasks(agent.vehicles(), hypotheticalWinTaskSet , rand);
+			} else {
 				on_wait_sol = new NextTasks(on_wait_sol, task);
 			}
-			System.out.println(3);
-			LocalSearch SLS = new LocalSearch(vehicles, hypotheticalWinTaskSet);
-			int n_steps = 7 - my_tasks.size();
-			System.out.println(5);
-			on_wait_sol = SLS.SLSAlgoConsolidation(timeoutBid - startTime - 1000, on_wait_sol, n_steps, 10);
-			System.out.println(44);
+			
+			//System.out.println(10);
+			LocalSearch SLS = new LocalSearch(agent.vehicles(), hypotheticalWinTaskSet);
+			//System.out.println(11);
+			on_wait_sol = SLS.SLSAlgoConsolidation(RemaingTime - 3000, on_wait_sol, 1, 10);
+			//System.out.println(12);
 			LinkedList<Plan> plans = SLS.create_plan(on_wait_sol);
-			System.out.println(4);
-			
+			//System.out.println(13);
+			newCost=0.0;
 			for(int i=0 ; i< plans.size(); i++) {
-				marginalCost+=vehicles.get(i).costPerKm()*plans.get(i).totalDistance();
-				
+				newCost+=agent.vehicles().get(i).costPerKm()*plans.get(i).totalDistance();
 			}
-			fiction_cost = marginalCost-current_cost;
+			double marginalCostSLS = newCost-current_cost;
 			
-			bid =fiction_cost;
-			
-		}else if(my_tasks.size()>SLS_limit) {
-			
-			double best_marge_cost=99999999;
-			double current_marge_cost;
-			
-			for(int i=0; i<vehicles.size(); i++) {
-				TaskSet ts= TaskSet.copyOf(vehicle_tasks.get(i));
-				//ts.add(task);
-				State startState= new State(vehicles.get(i), ts);
-				current_marge_cost = Astar.marginalCost(startState, task, Heuristic.DISTANCE);
-				if(current_marge_cost<best_marge_cost) {
-					best_marge_cost=current_marge_cost;
-					this.vehicle_index=i;
-					
-				}
-			}
-			bid=best_marge_cost*addaptive_coeff;
-					
+			//In case of win the newCost becomes the current cost
+			marginalCost = (marginalCostSLS * RemaingTime + astarMarginalCost * (timeoutBid - RemaingTime)) / timeoutBid; // weighted avg
+			bid = marginalCost + expected_profit;
+			//System.out.println(11);
+			return (long) Math.round(bid);
 		}
-	
-		System.out.println(111);
-		return (long) Math.round(bid);
 	}
 	
 	
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 		
-		System.out.println("Agent " + agent.name() + " has "+ + tasks.size() +" tasks ");
+		System.out.println("Agent " + agent.name() + " has "+ tasks.size() +" tasks ");
 		if(tasks.size() <= 0) return emptyPlans();
 		else {
-		
+			NextTasks startingPoint = new NextTasks(vehicles, tasks);
 			LocalSearch SLS = new LocalSearch(vehicles, tasks);
-			System.out.println("Agent ok construction" + vehicles.size());
+			System.out.println("SLS object constructed for " + vehicles.size() + " vehicles");
 	        NextTasks final_solution = SLS.SLSAlgo(timeoutPlan - 1000);
 	        
-	        System.out.println("SLS A marché");
+	        System.out.println("SLS finished");
 	        List<Plan> plans = SLS.create_plan(final_solution);
-	        System.out.println("Plans préetsxs");
+	        System.out.println("Plans created");
 	        
 			return plans;
 		}
 	}
-
+	
 	public List<Plan> emptyPlans() {
 		List<Plan> res = new ArrayList<Plan>();
 		for(int i=0; i < agent.vehicles().size(); ++i) {
@@ -240,4 +204,5 @@ public class Auction_rendu implements AuctionBehavior {
 		}
 		return res;
 	}
+
 }
