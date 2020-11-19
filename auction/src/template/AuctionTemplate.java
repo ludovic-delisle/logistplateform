@@ -144,6 +144,15 @@ public class AuctionTemplate implements AuctionBehavior {
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 		
+		if(tasks.size()==0) {
+			System.out.println("AH!");
+			List<Plan> p = new ArrayList<Plan>();
+			for(int i=0; i<vehicles.size(); i++) {
+				p.add(Plan.EMPTY);
+			}
+			return p;
+		}
+		
 		System.out.println("Agent " + agent.name() + " has "+ + tasks.size() +" tasks ");
 		
 		

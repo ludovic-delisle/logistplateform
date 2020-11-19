@@ -268,6 +268,17 @@ public class Auction_ludo implements AuctionBehavior {
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 		
+		System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAH!");
+		
+		if(tasks.size()==0) {
+			System.out.println("AH!");
+			List<Plan> p = new ArrayList<Plan>();
+			for(int i=0; i<vehicles.size(); i++) {
+				p.add(Plan.EMPTY);
+			}
+			return p;
+		}
+		
 		System.out.println("Agent " + agent.name() + " has "+ + tasks.size() +" tasks ");
 		
 		
@@ -275,32 +286,11 @@ public class Auction_ludo implements AuctionBehavior {
 		System.out.println("Agent ok construction" + vehicles.size());
         NextTasks final_solution = SLS.SLSAlgo();
         
-        System.out.println("SLS A marché");
+        System.out.println("SLS A march�");
         List<Plan> plans = SLS.create_plan(final_solution);
-        System.out.println("Plans préetsxs");
+        System.out.println("Plans prets");
         
 		return plans;
 	}
 
-	private Plan naivePlan(Vehicle vehicle, TaskSet tasks) {
-		City current = vehicle.getCurrentCity();
-		Plan plan = new Plan(current);
-
-		for (Task task : tasks) {
-			// move: current city => pickup location
-			for (City city : current.pathTo(task.pickupCity))
-				plan.appendMove(city);
-
-			plan.appendPickup(task);
-
-			// move: pickup location => delivery location
-			for (City city : task.path())
-				plan.appendMove(city);
-			plan.appendDelivery(task);
-
-			// set current city
-			current = task.deliveryCity;
-		}
-		return plan;
-	}
 }
