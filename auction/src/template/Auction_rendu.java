@@ -154,17 +154,14 @@ public class Auction_rendu implements AuctionBehavior {
 	@Override
 	public Long askPrice(Task task) {
 		final long startTime = System.currentTimeMillis();
-		System.out.println(1);
 		double bid=0;
 		Double dest_city_value = agent.readProperty("city_value_factor",  Double.class, 0.0)*(1 - distribution.probability(task.deliveryCity, null));
 		TaskSet hypotheticalWinTaskSet = agent.getTasks().clone();
 		hypotheticalWinTaskSet.add(task);
 		tasks.add(task);
-		System.out.println(2);
 		
 		double marginalCost=0.0;
 		my_tasks.add(task);
-		System.out.println(3);
 		if(my_tasks.size()<=SLS_limit) {
 			if(current_sol==null) {
 				on_wait_sol = new NextTasks(vehicles, hypotheticalWinTaskSet , rand);
@@ -172,14 +169,10 @@ public class Auction_rendu implements AuctionBehavior {
 			else {
 				on_wait_sol = new NextTasks(on_wait_sol, task);
 			}
-			System.out.println(3);
 			LocalSearch SLS = new LocalSearch(vehicles, hypotheticalWinTaskSet);
 			int n_steps = 7 - my_tasks.size();
-			System.out.println(5);
 			on_wait_sol = SLS.SLSAlgoConsolidation(timeoutBid - startTime - 1000, on_wait_sol, n_steps, 10);
-			System.out.println(44);
 			LinkedList<Plan> plans = SLS.create_plan(on_wait_sol);
-			System.out.println(4);
 			
 			for(int i=0 ; i< plans.size(); i++) {
 				marginalCost+=vehicles.get(i).costPerKm()*plans.get(i).totalDistance();
@@ -209,7 +202,6 @@ public class Auction_rendu implements AuctionBehavior {
 					
 		}
 	
-		System.out.println(111);
 		return (long) Math.round(bid);
 	}
 	

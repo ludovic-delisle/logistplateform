@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 import centralizedAlgo.LocalSearch;
@@ -56,8 +57,10 @@ public class Auction_jerome implements AuctionBehavior {
 	private Double newCost=0.0;
 	private boolean first_win=true;
 	private boolean first_bid=true;
+	double expected_profit = 1000.0;
 	
 	private int vehicle_index;
+	private int nb_successive_losses=0;
 	
 	private int SLS_limit=5;
 	private double addaptive_coeff=0.99;
@@ -65,7 +68,6 @@ public class Auction_jerome implements AuctionBehavior {
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
-		System.out.println(1);
 		LogistSettings ls = null;
         try {
             ls = Parsers.parseSettings("config" + File.separator + "settings_auction.xml");
@@ -76,16 +78,13 @@ public class Auction_jerome implements AuctionBehavior {
         timeoutSetup = ls.get(LogistSettings.TimeoutKey.SETUP);
         timeoutBid = ls.get(LogistSettings.TimeoutKey.BID);
         timeoutPlan = ls.get(LogistSettings.TimeoutKey.PLAN);
-        System.out.println(2);
 		this.topology = topology;
 		this.distribution = distribution;
 		this.agent = agent;
-		System.out.println(3);
 	}
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
-		System.out.println(4);
 		// int the data struct that stores the bid history
 		if(first_bid) {
 			first_bid=false;
@@ -102,7 +101,7 @@ public class Auction_jerome implements AuctionBehavior {
 		}
 		// in case of win
 		if (winner == agent.id()) {
-			
+			nb_successive_losses=0;
 			HashMap<Vehicle, LinkedList<Task>> nt = on_wait_sol.get_nextTask();
 			current_cost = newCost;
 			// current sol becomes the hypotheticalWinSol
@@ -112,29 +111,34 @@ public class Auction_jerome implements AuctionBehavior {
 			
 			System.out.println("Winner = " + agent.name());
 			System.out.println("winner bid " + bids[0] + " other " + bids[1]);
-			//update biddingFactor depending on previous auctions results
-			double avg = Arrays.stream(bids).mapToInt(i -> (int) i.intValue()).sum();
-			System.out.println(5);
+			expected_profit = expected_profit*1.2 + 100;
+			//update biddingFactor depending on previous opponent bids		
 			
 		} else {
+			nb_successive_losses+=1;
 			on_wait_sol=current_sol;
+			int[] opponentBids = IntStream.range(0, bids.length) 
+		            .filter(i -> i != agent.id()) 
+		            .map(i -> bids[i].intValue()) 
+		            .toArray(); 
+			double avg = Arrays.stream(opponentBids).sum() / opponentBids.length;
+			System.out.println("our = " + bids[agent.id()] + "other avg: " + avg);
+			expected_profit = expected_profit * avg / (bids[agent.id()] * nb_successive_losses + 1);
+			System.out.println("Expected_profit = " + expected_profit);
 		}
-		System.out.println(5);
 	}
 	
 	
 	
 	@Override
 	public Long askPrice(Task task) {
-		System.out.println(6);
 		final long startTime = System.currentTimeMillis();
 		double bid=0;
-		double dest_city_value = agent.readProperty("city_value_factor",  Double.class, 0.0)*(1 - distribution.probability(task.deliveryCity, null));
+		double dest_city_value = (1 - distribution.probability(task.deliveryCity, null)); // proba that there is another task to pickup in the delivery city of the current task
 		double marginalCost=Integer.MAX_VALUE;
 		double astarMarginalCost = Integer.MAX_VALUE;
 		double current_marge_cost=0.0;
-		double expected_profit = 0.0;
-		//System.out.println(7);
+		
 		
 		for(int i=0; i<agent.vehicles().size(); i++) {
 			State startState= new State(agent.vehicles().get(i), agent.vehicles().get(i).getCurrentTasks().clone());
@@ -171,7 +175,8 @@ public class Auction_jerome implements AuctionBehavior {
 			
 			//In case of win the newCost becomes the current cost
 			marginalCost = (marginalCostSLS * RemaingTime + astarMarginalCost * (timeoutBid - RemaingTime)) / timeoutBid; // weighted avg
-			bid = marginalCost + expected_profit;
+			if(marginalCost < 0) bid = marginalCost/2 +expected_profit * dest_city_value * 2;
+			else bid = marginalCost + expected_profit * dest_city_value * 2;
 			//System.out.println(11);
 			return (long) Math.round(bid);
 		}

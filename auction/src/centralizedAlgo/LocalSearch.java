@@ -58,7 +58,7 @@ public class LocalSearch {
 				//System.out.println(500);
 				solution = candidate_solution;
 				if(cost_action(candidate_solution) < cost_action(best_solution)) {
-					System.out.println("Best global cost: "+ cost_action(candidate_solution));
+					//System.out.println("Best global cost: "+ cost_action(candidate_solution));
 					best_solution=candidate_solution;
 					
 				}
@@ -106,7 +106,7 @@ public class LocalSearch {
 				
 				solution = candidate_solution;
 				if(cost_action(candidate_solution) < cost_action(best_solution)) {
-					System.out.println("Best global cost: "+ cost_action(candidate_solution));
+					//System.out.println("Best global cost: "+ cost_action(candidate_solution));
 					best_solution=candidate_solution;
 					
 				}
@@ -238,7 +238,7 @@ public class LocalSearch {
 				plan.append(a.getAction());
 				current_city=a.city();
 			}
-			System.out.println(plan);
+			//System.out.println(plan);
 			plans.add(plan);
 		}
 		return plans;
