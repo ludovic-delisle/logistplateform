@@ -22,58 +22,79 @@ public class Predictions {
 		
 		return b;
 	}
-	public double estimated_bid(List<Long> y_, List<Long> x_, List<Double> t_, List<Double> city_val_){
+	public double estimated_bid(List<Long> y_, List<Long> x_, double bid){
 		List<Long> y= new ArrayList<Long>(y_);
-		List<Double> x= new ArrayList<Double>();
-		List<Double> t = new ArrayList<Double>(t_);
-		List<Double> city_val = new ArrayList<Double>(city_val_);
+		List<Long> xl= new ArrayList<Long>(x_);
 		
-		for(int i=0; i<x_.size(); i++) {
-			x.add(Double.valueOf(x_.get(i))/t.get(i));
+		List<Double> x = new ArrayList<Double>();
+		x=xl.stream()
+			    .map(Double::valueOf)
+			    .collect(Collectors.toList());
+		
+		x.add(bid);
+		y.remove(0);
+		
+		
+		
+		
+		List<Double> avg=new ArrayList<Double>();
+		
+		for(Double xi : x) {
+			Double a=0.0;
+			int j=1;
+			for(int i=0; i<x.indexOf(xi); i++) {
+				j++;
+				a+=x.get(i);
+			}
+			avg.add(a/j);
+			j=0;
+			a=0.0;
 		}
-		
-		y.remove(0);
-		y.remove(0);
-		
-		Double current_task= t.remove(t.size()-1);
-		Double current_city_val= city_val.remove(city_val.size()-1);
-		Double x1 = Double.valueOf(x.get(x.size()-1));
-		Double x2 = Double.valueOf(x.get(x.size()-2));
-		Double x3 = Double.valueOf(x.get(x.size()-3));
-		
-		int height = y.size();
-		int width = 6;
+		 
+		Double x1 = Double.valueOf(x.remove(x.size()-1));
+		Double avg1 = Double.valueOf(avg.remove(avg.size()-1));
+		int height = y.size()-1;
+		int width = 3;
 		List<Double> Y = y.stream()
 		         .map(e -> Double.valueOf(e))
 		         .collect(Collectors.toList());
 		
 		
-		double[][] matrix = matrix_creation( width,  height,  x, t, city_val);
+		double[][] matrix = matrix_creation( width,  height,  x, avg);
 		double[] mat_y = matrix_creation_line(height, Y);
 		
 		double[] b = get_regression_coeff(matrix, mat_y);
 		
 		double estimated_bid = b[0]+
-							   b[1]*current_task+
-							   b[2]*current_city_val+
-							   b[3]*x1+
-							   b[4]*x2+
-							   b[5]*x3;
+							   b[1]*x1+
+							   b[2]*avg1;
+							   
 		
 		return estimated_bid;
 	}
+	
+	public void printm(double[][] arr) {
+		for (int row = 0; row < arr.length; row++)//Cycles through rows
+		{
+		  for (int col = 0; col < arr[row].length; col++)//Cycles through columns
+		  {
+		    System.out.print(" " + arr[row][col]); //change the %5d to however much space you want
+		  }
+		  System.out.println(); //Makes a new row
+		}
+	}
 
-	public double[][] matrix_creation(int width, int height, List<Double> x, List<Double> t, List<Double> city_val){
+	public double[][] matrix_creation(int width, int height, List<Double> x, List<Double> avg){
 		double[][] matrix =new double[height][width];
 		
 		for(int i=0; i<height; i++) {
 			matrix[i][0]= 1.0;
-			matrix[i][1]=t.get(i);
-			matrix[i][2]=city_val.get(i);
-			for(int j=3; j<width; j++) {
-				matrix[i][j]= x.get(i+j-3);
-			}
+			matrix[i][1]=x.get(i);
+			matrix[i][2]=avg.get(i);
+			
 		}
+		
+		
 		return matrix;
 	}
 	public double[] matrix_creation_line( int height, List<Double> x){

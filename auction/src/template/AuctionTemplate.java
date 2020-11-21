@@ -158,7 +158,7 @@ public class AuctionTemplate implements AuctionBehavior {
 		
 		LocalSearch SLS = new LocalSearch(vehicles, tasks);
 		System.out.println("Agent ok construction" + vehicles.size());
-        NextTasks final_solution = SLS.SLSAlgo();
+        NextTasks final_solution = SLS.SLSAlgo(7);
         
         System.out.println("SLS A marché");
         List<Plan> plans = SLS.create_plan(final_solution);
