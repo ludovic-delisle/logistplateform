@@ -57,7 +57,7 @@ public class Auction_jerome implements AuctionBehavior {
 	private Double newCost=0.0;
 	private boolean first_win=true;
 	private boolean first_bid=true;
-	double expected_profit = 1000.0;
+	double expected_profit = 0.0;
 	
 	private int vehicle_index;
 	private int nb_successive_losses=0;
@@ -186,7 +186,7 @@ public class Auction_jerome implements AuctionBehavior {
 			double marginalCostSLS = newCost-current_cost;
 			
 			//In case of win the newCost becomes the current cost
-			marginalCost = (marginalCostSLS * RemaingTime + astarMarginalCost * (timeoutBid - RemaingTime)) / timeoutBid; // weighted avg
+			marginalCost = marginalCostSLS; // weighted avg
 			if(marginalCost < 0) bid = marginalCost/2 +expected_profit * dest_city_value * 2;
 			else bid = marginalCost + expected_profit * dest_city_value * 2;
 			//System.out.println(11);
