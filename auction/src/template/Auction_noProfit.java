@@ -38,7 +38,7 @@ import prediction.Predictions;
  * 
  */
 @SuppressWarnings("unused")
-public class Auction_jerome implements AuctionBehavior {
+public class Auction_noProfit implements AuctionBehavior {
 
 	Random rand=new Random(9);
 	
@@ -57,10 +57,8 @@ public class Auction_jerome implements AuctionBehavior {
 	private Double newCost=0.0;
 	private boolean first_win=true;
 	private boolean first_bid=true;
-	double expected_profit = 1000.0;
 	
 	private int vehicle_index;
-	private int nb_successive_losses=0;
 	
 	private int SLS_limit=5;
 	private double addaptive_coeff=0.99;
@@ -101,7 +99,6 @@ public class Auction_jerome implements AuctionBehavior {
 		}
 		// in case of win
 		if (winner == agent.id()) {
-			nb_successive_losses=0;
 			HashMap<Vehicle, LinkedList<Task>> nt = on_wait_sol.get_nextTask();
 			current_cost = newCost;
 			// current sol becomes the hypotheticalWinSol
@@ -111,44 +108,22 @@ public class Auction_jerome implements AuctionBehavior {
 			
 			System.out.println("Winner = " + agent.name());
 			System.out.println("winner bid " + bids[0] + " other " + bids[1]);
-			expected_profit = expected_profit*1.2 + 100;
-			//update biddingFactor depending on previous opponent bids
-			addaptive_coeff = min(1.7, addaptive_coeff+0.1);
+			//update biddingFactor depending on previous opponent bids		
 			
 		} else {
-			nb_successive_losses+=1;
 			on_wait_sol=current_sol;
-			int[] opponentBids = IntStream.range(0, bids.length) 
-		            .filter(i -> i != agent.id()) 
-		            .map(i -> bids[i].intValue()) 
-		            .toArray(); 
-			double avg = Arrays.stream(opponentBids).sum() / opponentBids.length;
-			System.out.println("our = " + bids[agent.id()] + "other avg: " + avg);
-			expected_profit = expected_profit * avg / (bids[agent.id()] * nb_successive_losses + 1);
-			System.out.println("Expected_profit = " + expected_profit);
-			addaptive_coeff = max(0.1, addaptive_coeff-0.1);
 		}
 	}
 	
 	
 	
-	private double min(double d, double e) {
-		if(d<e) return d;
-		else return e;
-	}
-	
-	private double max(double d, double e) {
-		if(d>e) return d;
-		else return e;
-	}
-
 	@Override
 	public Long askPrice(Task task) {
 		final long startTime = System.currentTimeMillis();
 		double bid=0;
 		double dest_city_value = (1 - distribution.probability(task.deliveryCity, null)); // proba that there is another task to pickup in the delivery city of the current task
-		double marginalCost=Integer.MAX_VALUE;
-		double astarMarginalCost = Integer.MAX_VALUE;
+		double marginalCost=0.0;
+		double astarMarginalCost = 0.0;
 		double current_marge_cost=0.0;
 		
 		
@@ -162,7 +137,7 @@ public class Auction_jerome implements AuctionBehavior {
 		}
 		//System.out.println(8);
 		final long RemaingTime = timeoutBid - (System.currentTimeMillis() - startTime);
-		if(RemaingTime < 2000) return (long) Math.round(astarMarginalCost + expected_profit);
+		if(RemaingTime < 2000) return (long) Math.round(astarMarginalCost);
 		else {
 			TaskSet hypotheticalWinTaskSet = agent.getTasks().clone();
 			hypotheticalWinTaskSet.add(task);
@@ -187,10 +162,10 @@ public class Auction_jerome implements AuctionBehavior {
 			
 			//In case of win the newCost becomes the current cost
 			marginalCost = (marginalCostSLS * RemaingTime + astarMarginalCost * (timeoutBid - RemaingTime)) / timeoutBid; // weighted avg
-			if(marginalCost < 0) bid = marginalCost/2 +expected_profit * dest_city_value * 2;
-			else bid = marginalCost + expected_profit * dest_city_value * 2;
+			
+			bid = marginalCost;
 			//System.out.println(11);
-			return (long) Math.round(addaptive_coeff * bid);
+			return (long) Math.round(bid);
 		}
 	}
 	
@@ -204,7 +179,7 @@ public class Auction_jerome implements AuctionBehavior {
 			NextTasks startingPoint = new NextTasks(vehicles, tasks);
 			LocalSearch SLS = new LocalSearch(vehicles, tasks);
 			System.out.println("SLS object constructed for " + vehicles.size() + " vehicles");
-	        NextTasks final_solution = SLS.SLSAlgo(timeoutPlan - 1000);
+	        NextTasks final_solution = SLS.SLSAlgo(timeoutPlan - 2000);
 	        
 	        System.out.println("SLS finished");
 	        List<Plan> plans = SLS.create_plan(final_solution);
