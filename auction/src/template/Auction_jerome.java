@@ -58,6 +58,7 @@ public class Auction_jerome implements AuctionBehavior {
 	private boolean first_win=true;
 	private boolean first_bid=true;
 	double expected_profit = 0.0;
+	double last_bid=0.0;
 	
 	private int vehicle_index;
 	private int nb_successive_losses=0;
@@ -86,6 +87,7 @@ public class Auction_jerome implements AuctionBehavior {
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		// int the data struct that stores the bid history
+		
 		if(first_bid) {
 			first_bid=false;
 			for(int i=0; i<bids.length; i++) {
@@ -101,6 +103,7 @@ public class Auction_jerome implements AuctionBehavior {
 		}
 		// in case of win
 		if (winner == agent.id()) {
+			last_bid=bids[winner];
 			nb_successive_losses=0;
 			HashMap<Vehicle, LinkedList<Task>> nt = on_wait_sol.get_nextTask();
 			current_cost = newCost;
@@ -204,11 +207,19 @@ public class Auction_jerome implements AuctionBehavior {
 			NextTasks startingPoint = new NextTasks(vehicles, tasks);
 			LocalSearch SLS = new LocalSearch(vehicles, tasks);
 			System.out.println("SLS object constructed for " + vehicles.size() + " vehicles");
-	        NextTasks final_solution = SLS.SLSAlgo(timeoutPlan - 1000);
+	        NextTasks final_solution = SLS.SLSAlgo(30000);
 	        
 	        System.out.println("SLS finished");
 	        List<Plan> plans = SLS.create_plan(final_solution);
+	        double pl =0.0;
+	        for(Plan pli : plans) {
+	        	pl+= pli.totalDistance()*vehicles.get(0).costPerKm();
+	        }
+	        if(tasks.size()>our_bids.size()) {
+	        	tot_reward+=last_bid;
+	        }
 	        System.out.println("Plans created");
+	        System.out.println("bids sum = " + tot_reward + "total cost = "+ pl + " profit = "+ (tot_reward-pl));
 	        
 			return plans;
 		}

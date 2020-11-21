@@ -50,6 +50,7 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 	private List<ArrayList<Long>> bids_table= new ArrayList<ArrayList<Long>>();
 	private List<ArrayList<Long>> estimate_table= new ArrayList<ArrayList<Long>>();
 	private List<Boolean> estimatable_with_reg = new ArrayList<Boolean>();
+	private Boolean all_estimables=true;
 	private List<Long> estimate_avg_inacuracy = new ArrayList<Long>();
 	
 	private NextTasks current_sol;
@@ -200,12 +201,14 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 				}
 				if(bids_table.get(0).size()>4) {
 					check_reg();
+					double smallest_bid= 999999999;
 					for(int i=0; i<estimatable_with_reg.size(); i++) {
 						if(estimatable_with_reg.get(i) && i!=agent.id()) {
 							long e = estimate_table.get(i).get( estimate_table.get(i).size()-1);
 							long e_safe = e-estimate_avg_inacuracy.get(i);
-							if((bid > e_safe && e_safe>marginalCost) || bid<e_safe) {
-								bid=e_safe;
+							if(e_safe<smallest_bid)smallest_bid=e_safe;
+							if((bid > e_safe && e_safe>marginalCost) || (bid<e_safe && e_safe==smallest_bid)) {
+								bid=0.95*e_safe;
 								System.out.println("estimate   "+ e_safe);
 							}
 						}
@@ -267,6 +270,7 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 	}
 	
 	private void check_reg(){
+		all_estimables=true;
 		for(int i=0; i< bids_table.size(); i++) {
 			Double diff=0.0;
 			for(int j=bids_table.get(i).size()-3; j< bids_table.get(i).size(); j++) {
@@ -278,6 +282,7 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 				estimatable_with_reg.set(i, true);
 			}
 			else  {
+				if(agent.id()!=i) all_estimables=false;
 				estimatable_with_reg.set(i, false);
 			}
 		}
