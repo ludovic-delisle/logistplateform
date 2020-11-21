@@ -112,7 +112,8 @@ public class Auction_jerome implements AuctionBehavior {
 			System.out.println("Winner = " + agent.name());
 			System.out.println("winner bid " + bids[0] + " other " + bids[1]);
 			expected_profit = expected_profit*1.2 + 100;
-			//update biddingFactor depending on previous opponent bids		
+			//update biddingFactor depending on previous opponent bids
+			addaptive_coeff = min(1.7, addaptive_coeff+0.1);
 			
 		} else {
 			nb_successive_losses+=1;
@@ -125,7 +126,7 @@ public class Auction_jerome implements AuctionBehavior {
 			System.out.println("our = " + bids[agent.id()] + "other avg: " + avg);
 			expected_profit = expected_profit * avg / (bids[agent.id()] * nb_successive_losses + 1);
 			System.out.println("Expected_profit = " + expected_profit);
-			addaptive_coeff = min(0.1, addaptive_coeff-0.1);
+			addaptive_coeff = max(0.1, addaptive_coeff-0.1);
 		}
 	}
 	
@@ -133,6 +134,11 @@ public class Auction_jerome implements AuctionBehavior {
 	
 	private double min(double d, double e) {
 		if(d<e) return d;
+		else return e;
+	}
+	
+	private double max(double d, double e) {
+		if(d>e) return d;
 		else return e;
 	}
 
