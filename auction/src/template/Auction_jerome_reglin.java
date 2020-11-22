@@ -56,6 +56,7 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 	private NextTasks current_sol;
 	private NextTasks on_wait_sol;
 	
+	private List<Double> tasks_costs = new ArrayList<Double>();
 	private Double tot_reward=0.0;
 	private Double current_cost=0.0;
 	private Double newCost=0.0;
@@ -120,8 +121,9 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 			
 			
 			System.out.println("Winner = " + agent.name());
-			System.out.println("winner bid " + bids[0] + " other " + bids[1]);
+			System.out.println("winner bid " + bids[winner]);
 			expected_profit = expected_profit*1.2 + 100;
+			addaptive_coeff = min(1.7, addaptive_coeff+0.1);
 			//update biddingFactor depending on previous opponent bids		
 			
 		} else {
@@ -132,17 +134,24 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 		            .map(i -> bids[i].intValue()) 
 		            .toArray(); 
 			double avg = Arrays.stream(opponentBids).sum() / opponentBids.length;
-			//System.out.println("our = " + bids[agent.id()] + "other avg: " + avg);
 			expected_profit = expected_profit * avg / (bids[agent.id()] * nb_successive_losses + 1);
-			//System.out.println("Expected_profit = " + expected_profit);
+			addaptive_coeff = max(0.1, addaptive_coeff-0.1);
 		}
 	}
+	private double min(double d, double e) {
+		if(d<e) return d;
+		else return e;
+	}
 	
+	private double max(double d, double e) {
+		if(d>e) return d;
+		else return e;
+	}
 	
 	
 	@Override
 	public Long askPrice(Task task) {
-		
+		tasks_costs.add(task.pathLength()*agent.vehicles().get(0).costPerKm());
 		final long startTime = System.currentTimeMillis();
 		double bid=0;
 		double dest_city_value = (1 - distribution.probability(task.deliveryCity, null)); // proba that there is another task to pickup in the delivery city of the current task
@@ -152,13 +161,14 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 		
 		
 		for(int i=0; i<agent.vehicles().size(); i++) {
-			State startState= new State(agent.vehicles().get(i), agent.vehicles().get(i).getCurrentTasks().clone());
+			State startState= new State(agent.vehicles().get(i), agent.getTasks());
 			current_marge_cost = Astar.marginalCost(startState, task, Heuristic.DISTANCE);
 			if(current_marge_cost<astarMarginalCost) {
 				astarMarginalCost=current_marge_cost;
 				this.vehicle_index=i;
 			}
 		}
+		
 		//System.out.println(8);
 		final long RemaingTime = timeoutBid - (System.currentTimeMillis() - startTime);
 		if(RemaingTime < 2000) return (long) Math.round(astarMarginalCost + expected_profit);
@@ -185,7 +195,8 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 			double marginalCostSLS = newCost-current_cost;
 			
 			//In case of win the newCost becomes the current cost
-			marginalCost = marginalCostSLS; // weighted avg
+			if(our_bids.size()>4)marginalCost = 0.8*marginalCostSLS + 0.2*marginalCostSLS/(1+our_bids.size());
+			else marginalCost = marginalCostSLS;
 			if(marginalCost < 0) bid = marginalCost/2 +expected_profit * dest_city_value * 2;
 			else bid = marginalCost + expected_profit * dest_city_value * 2;
 			//System.out.println(11);
@@ -286,6 +297,13 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 				estimatable_with_reg.set(i, false);
 			}
 		}
+	}
+	private TaskSet task_list_to_set(List<Task> task_list) {
+		TaskSet t = TaskSet.noneOf(agent.getTasks());
+		for(Task ta: task_list) {
+			t.add(ta);
+		}
+		return t;
 	}
 
 }

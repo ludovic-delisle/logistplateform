@@ -116,7 +116,7 @@ public class dummy_avg implements AuctionBehavior {
 		Double avg=10000.0;
 		if(not_our_bids.size()>0) avg = not_our_bids.stream().mapToDouble(Double::doubleValue).sum() / not_our_bids.size();
 		
-		return (long) Math.round(avg);
+		return (long) 0;//Math.round(avg);
 	}
 	
 	

@@ -83,7 +83,92 @@ public class Predictions {
 		  System.out.println(); //Makes a new row
 		}
 	}
-
+	
+	public double estimated_bid(List<Long> y_, List<Long> x_, double bid, List<Double> task_costs_){
+		List<Long> y= new ArrayList<Long>(y_);
+		List<Long> xl= new ArrayList<Long>(x_);
+		List<Double> task_costs=new ArrayList<Double>(task_costs_);
+		List<Double> x = new ArrayList<Double>();
+		x=xl.stream()
+			    .map(Double::valueOf)
+			    .collect(Collectors.toList());
+		
+		x.add(bid);
+		y.remove(0);
+		
+		
+		
+		
+		List<Double> avg=new ArrayList<Double>();
+		
+		for(Double xi : x) {
+			Double a=0.0;
+			int j=1;
+			for(int i=0; i<x.indexOf(xi); i++) {
+				j++;
+				a+=x.get(i);
+			}
+			avg.add(a/j);
+			j=0;
+			a=0.0;
+		}
+		 
+		Double x1 = Double.valueOf(x.remove(x.size()-1));
+		Double avg1 = Double.valueOf(avg.remove(avg.size()-1));
+		Double task_cost1 = Double.valueOf(task_costs.remove(task_costs.size()-1));
+		int height = y.size()-1;
+		int width = 5;
+		
+		List<Double> Y = y.stream()
+		         .map(e -> Double.valueOf(e))
+		         .collect(Collectors.toList());
+		
+		List<Double> avg_y=new ArrayList<Double>();
+		
+		for(Double yi : Y) {
+			Double a=0.0;
+			int j=1;
+			for(int i=0; i<x.indexOf(yi); i++) {
+				j++;
+				a+=x.get(i);
+			}
+			avg_y.add(a/j);
+			j=0;
+			a=0.0;
+		}
+		
+		Double avg_y1= avg_y.get(avg_y.size()-1);
+		double[][] matrix = matrix_creation( width,  height,  x, avg, task_costs, avg_y);
+		double[] mat_y = matrix_creation_line(height, Y);
+		
+		double[] b = get_regression_coeff(matrix, mat_y);
+		
+		double estimated_bid = b[0]+
+							   b[1]*x1+
+							   b[2]*avg1+
+							   b[3]*task_cost1+
+							   b[4]*avg_y1;
+							   
+		
+		return estimated_bid;
+	}
+	
+	public double[][] matrix_creation(int width, int height, List<Double> x, List<Double> avg, List<Double> tasks_costs,  List<Double> avg_y){
+		double[][] matrix =new double[height][width];
+		
+		for(int i=0; i<height; i++) {
+			matrix[i][0]= 1.0;
+			matrix[i][1]=x.get(i);
+			matrix[i][2]=avg.get(i);
+			matrix[i][3]=tasks_costs.get(i);
+			matrix[i][4]=avg_y.get(i);
+			
+		}
+		
+		
+		return matrix;
+	}
+	
 	public double[][] matrix_creation(int width, int height, List<Double> x, List<Double> avg){
 		double[][] matrix =new double[height][width];
 		

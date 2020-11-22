@@ -301,5 +301,5 @@ public class State{
 		System.out.println("");
 		System.out.println(" Wght carr: " + res + " check: " + this.getCurrentTasks().weightSum()+ " rem: "+this.getRemainingCapacity());
 	}
-
+	
 }
