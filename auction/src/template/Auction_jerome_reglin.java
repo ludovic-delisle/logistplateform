@@ -134,7 +134,7 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 		            .map(i -> bids[i].intValue()) 
 		            .toArray(); 
 			double avg = Arrays.stream(opponentBids).sum() / opponentBids.length;
-			expected_profit = expected_profit * avg / (bids[agent.id()] * nb_successive_losses + 1);
+			expected_profit = expected_profit * avg / (bids[agent.id()] * nb_successive_losses * nb_successive_losses + 1);
 			addaptive_coeff = max(0.1, addaptive_coeff-0.1);
 		}
 	}
@@ -169,9 +169,8 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 			}
 		}
 		
-		//System.out.println(8);
 		final long RemaingTime = timeoutBid - (System.currentTimeMillis() - startTime);
-		if(RemaingTime < 2000) return (long) Math.round(astarMarginalCost + expected_profit);
+		if(RemaingTime < 3000) return (long) Math.round(astarMarginalCost + expected_profit);
 		else {
 			TaskSet hypotheticalWinTaskSet = agent.getTasks().clone();
 			hypotheticalWinTaskSet.add(task);
@@ -184,10 +183,10 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 			//System.out.println(10);
 			LocalSearch SLS = new LocalSearch(agent.vehicles(), hypotheticalWinTaskSet);
 			//System.out.println(11);
-			on_wait_sol = SLS.SLSAlgoConsolidation(RemaingTime - 3000, on_wait_sol, 1, 10);
+			on_wait_sol = SLS.SLSAlgoConsolidation(RemaingTime - 4000, on_wait_sol, 1, 10);
 			//System.out.println(12);
 			LinkedList<Plan> plans = SLS.create_plan(on_wait_sol);
-			//System.out.println(13);
+			System.out.println(13);
 			newCost=0.0;
 			for(int i=0 ; i< plans.size(); i++) {
 				newCost+=agent.vehicles().get(i).costPerKm()*plans.get(i).totalDistance();
@@ -195,8 +194,10 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 			double marginalCostSLS = newCost-current_cost;
 			
 			//In case of win the newCost becomes the current cost
+			//if we have a lot of tasks, SLS takes longer to reach it's optimal solution, so we anticipate this and slightly reduce it's estimation
 			if(our_bids.size()>4)marginalCost = 0.8*marginalCostSLS + 0.2*marginalCostSLS/(1+our_bids.size());
 			else marginalCost = marginalCostSLS;
+			//If the marginal cost is negative, wed divide it by 2 in order to mitigate our losses
 			if(marginalCost < 0) bid = marginalCost/2 +expected_profit * dest_city_value * 2;
 			else bid = marginalCost + expected_profit * dest_city_value * 2;
 			//System.out.println(11);
@@ -212,9 +213,10 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 				}
 				if(bids_table.get(0).size()>4) {
 					check_reg();
-					double smallest_bid= 999999999;
+					double smallest_bid= Integer.MAX_VALUE;
 					for(int i=0; i<estimatable_with_reg.size(); i++) {
 						if(estimatable_with_reg.get(i) && i!=agent.id()) {
+							System.out.println(estimate_table.get(i).size()-1);
 							long e = estimate_table.get(i).get( estimate_table.get(i).size()-1);
 							long e_safe = e-estimate_avg_inacuracy.get(i);
 							if(e_safe<smallest_bid)smallest_bid=e_safe;
@@ -242,7 +244,7 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 			NextTasks startingPoint = new NextTasks(vehicles, tasks);
 			LocalSearch SLS = new LocalSearch(vehicles, tasks);
 			System.out.println("SLS object constructed for " + vehicles.size() + " vehicles");
-	        NextTasks final_solution = SLS.SLSAlgo(20000);
+	        NextTasks final_solution = SLS.SLSAlgo(timeoutPlan - 1000);
 	        
 	        System.out.println("SLS finished");
 	        List<Plan> plans = SLS.create_plan(final_solution);
