@@ -71,6 +71,7 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 	private int SLS_limit=5;
 	private double addaptive_coeff=0.99;
 	private long timeoutSetup, timeoutBid, timeoutPlan;
+	private int use_reglin=0; // 0 = not initialised, 1 = will not be used, 2 = is used
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -112,6 +113,7 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 		}
 		// in case of win
 		if (winner == agent.id()) {
+			agent.getTasks().add(previous);
 			nb_successive_losses=0;
 			HashMap<Vehicle, LinkedList<Task>> nt = on_wait_sol.get_nextTask();
 			current_cost = newCost;
@@ -151,68 +153,47 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 	
 	@Override
 	public Long askPrice(Task task) {
-		tasks_costs.add(task.pathLength()*agent.vehicles().get(0).costPerKm());
 		final long startTime = System.currentTimeMillis();
+		
+		tasks_costs.add(task.pathLength()*agent.vehicles().get(0).costPerKm());
+		
 		double bid=0;
 		double dest_city_value = (1 - distribution.probability(task.deliveryCity, null)); // proba that there is another task to pickup in the delivery city of the current task
 		double marginalCost=Integer.MAX_VALUE;
-		double astarMarginalCost = Integer.MAX_VALUE;
-		double current_marge_cost=0.0;
+		
+		double astarMarginalCost = AstarEstimation(task);
 		
 		
-		for(int i=0; i<agent.vehicles().size(); i++) {
-			State startState= new State(agent.vehicles().get(i), agent.getTasks());
-			current_marge_cost = Astar.marginalCost(startState, task, Heuristic.DISTANCE);
-			if(current_marge_cost<astarMarginalCost) {
-				astarMarginalCost=current_marge_cost;
-				this.vehicle_index=i;
-			}
-		}
+		final long remaingTime = timeoutBid - (System.currentTimeMillis() - startTime);
+		// If we do not have much time, we just use Astar
+		if(remaingTime < 3000) return (long) Math.round(astarMarginalCost +expected_profit * dest_city_value * 2);
 		
-		final long RemaingTime = timeoutBid - (System.currentTimeMillis() - startTime);
-		if(RemaingTime < 3000) return (long) Math.round(astarMarginalCost + expected_profit);
-		else {
-			TaskSet hypotheticalWinTaskSet = agent.getTasks().clone();
-			hypotheticalWinTaskSet.add(task);
-			if(current_sol==null) {
-				on_wait_sol = new NextTasks(agent.vehicles(), hypotheticalWinTaskSet , rand);
-			} else {
-				on_wait_sol = new NextTasks(on_wait_sol, task);
-			}
-			
-			//System.out.println(10);
-			LocalSearch SLS = new LocalSearch(agent.vehicles(), hypotheticalWinTaskSet);
-			//System.out.println(11);
-			on_wait_sol = SLS.SLSAlgoConsolidation(RemaingTime - 4000, on_wait_sol, 1, 10);
-			//System.out.println(12);
-			LinkedList<Plan> plans = SLS.create_plan(on_wait_sol);
-			System.out.println(13);
-			newCost=0.0;
-			for(int i=0 ; i< plans.size(); i++) {
-				newCost+=agent.vehicles().get(i).costPerKm()*plans.get(i).totalDistance();
-			}
-			double marginalCostSLS = newCost-current_cost;
-			
-			//In case of win the newCost becomes the current cost
+		else if (use_reglin == 0 || use_reglin == 1) { // if reglin not initialised or not being used
+			System.out.println(1);
+			double marginalCostSLS = SLSEstimation(task, remaingTime);
+			System.out.println(2);
 			//if we have a lot of tasks, SLS takes longer to reach it's optimal solution, so we anticipate this and slightly reduce it's estimation
-			if(our_bids.size()>4)marginalCost = 0.8*marginalCostSLS + 0.2*marginalCostSLS/(1+our_bids.size());
+			if(our_bids.size()>4) marginalCost = 0.8*marginalCostSLS + 0.2*marginalCostSLS/(1+our_bids.size());
 			else marginalCost = marginalCostSLS;
 			//If the marginal cost is negative, wed divide it by 2 in order to mitigate our losses
-			if(marginalCost < 0) bid = marginalCost/2 +expected_profit * dest_city_value * 2;
-			else bid = marginalCost + expected_profit * dest_city_value * 2;
-			//System.out.println(11);
+			if(marginalCost < 0) bid = marginalCost/2 +expected_profit * dest_city_value;
+			else bid = marginalCost + expected_profit * dest_city_value;
 			last_bid=bid;
-			
+		}	
+		if(use_reglin == 0 || use_reglin == 2) {
+			System.out.println(3);
+			//If we have guessed correctly with reglin for 3 out of the 5 first rounds -> we use reg_lin
 			if(our_bids.size()>2) {
 				
 				Predictions p=new Predictions();
 				for(int i=0; i<bids_table.size(); i++) {
+					System.out.println(4);
 					ArrayList<Long> o=bids_table.get(i);
 					estimate_table.get(i).add((long) Math.round(p.estimated_bid(o, our_bids, bid)));
 					
 				}
-				if(bids_table.get(0).size()>4) {
-					check_reg();
+				if(bids_table.get(0).size()>4 ) {
+					System.out.println(5);	
 					double smallest_bid= Integer.MAX_VALUE;
 					for(int i=0; i<estimatable_with_reg.size(); i++) {
 						if(estimatable_with_reg.get(i) && i!=agent.id()) {
@@ -222,16 +203,60 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 							if(e_safe<smallest_bid)smallest_bid=e_safe;
 							if((bid > e_safe && e_safe>marginalCost) || (bid<e_safe && e_safe==smallest_bid)) {
 								bid=0.95*e_safe;
-								System.out.println("estimate   "+ e_safe);
+								System.out.println("estimate   "+ e_safe); 
 							}
 						}
 					}
 				}
 				
 			}
-			
-			return (long) Math.round(bid);
 		}
+		System.out.println(5);	
+		if(our_bids.size() > 2 && bids_table.get(0).size() == 5) 
+			if(check_reg()) use_reglin = 2;
+			else use_reglin = 1;
+		System.out.println(211);
+		return (long) Math.round(bid);
+	}
+	
+	public double AstarEstimation(Task task) { 
+		double astarMarginalCost = Integer.MAX_VALUE;
+		double current_marge_cost = Integer.MAX_VALUE;
+		for(int i=0; i<agent.vehicles().size(); i++) {
+			State startState= new State(agent.vehicles().get(i), agent.getTasks());
+			current_marge_cost = Astar.marginalCost(startState, task, Heuristic.DISTANCE);
+			if(current_marge_cost<astarMarginalCost) {
+				astarMarginalCost=current_marge_cost;
+				this.vehicle_index=i;
+			}
+		}
+	return astarMarginalCost;
+	}	
+	
+	public double SLSEstimation(Task task, long RemaingTime) {
+		TaskSet hypotheticalWinTaskSet = agent.getTasks().clone();
+		hypotheticalWinTaskSet.add(task);
+		if(current_sol==null) {
+			on_wait_sol = new NextTasks(agent.vehicles(), hypotheticalWinTaskSet , rand);
+		} else {
+			on_wait_sol = new NextTasks(on_wait_sol, task);
+		}
+		
+		//System.out.println(10);
+		LocalSearch SLS = new LocalSearch(agent.vehicles(), hypotheticalWinTaskSet);
+		//System.out.println(11);
+		long SLSTime = RemaingTime - 6000;
+		if(use_reglin == 1) SLSTime = RemaingTime - 2000;
+		
+		on_wait_sol = SLS.SLSAlgoConsolidation(SLSTime, on_wait_sol, 1, 10);
+		//System.out.println(12);
+		LinkedList<Plan> plans = SLS.create_plan(on_wait_sol);
+		//System.out.println(13);
+		newCost=0.0;
+		for(int i=0 ; i< plans.size(); i++) {
+			newCost+=agent.vehicles().get(i).costPerKm()*plans.get(i).totalDistance();
+		}
+		return newCost-current_cost;
 	}
 	
 	
@@ -282,7 +307,8 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 		return res;
 	}
 	
-	private void check_reg(){
+	private boolean check_reg(){
+		int count_correct_estimates = 0;
 		all_estimables=true;
 		for(int i=0; i< bids_table.size(); i++) {
 			Double diff=0.0;
@@ -290,15 +316,15 @@ public class Auction_jerome_reglin implements AuctionBehavior {
 				diff+=Math.abs(bids_table.get(i).get(j)-estimate_table.get(i).get(j))/3;
 				estimate_avg_inacuracy.set(i, (bids_table.get(i).get(j)-estimate_table.get(i).get(j))/3);
 			}
-			
 			if(diff<300) {	
+				++count_correct_estimates;
 				estimatable_with_reg.set(i, true);
-			}
-			else  {
+			} else {
 				if(agent.id()!=i) all_estimables=false;
 				estimatable_with_reg.set(i, false);
 			}
 		}
+		return count_correct_estimates >= 3;
 	}
 	private TaskSet task_list_to_set(List<Task> task_list) {
 		TaskSet t = TaskSet.noneOf(agent.getTasks());
